@@ -15,6 +15,7 @@ set(SOURCES
     src/arccmd.cpp
     src/formats/rar/rar.cpp
     src/formats/ha/ha.cpp
+    src/formats/pdf/pdf.cpp
     src/formats/custom/custom.cpp
     src/formats/arj/arj.cpp
     src/formats/ace/ace.cpp
