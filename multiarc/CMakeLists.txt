@@ -132,6 +132,12 @@ set(SOURCES
 
 add_library (multiarc MODULE ${SOURCES})
 
+## <PDFWriter>
+ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/src/formats/pdf/PDF-Writer-master)
+include_directories (${PDFWriter_INCLUDE_DIRS})
+target_link_libraries (multiarc PDFWriter)
+## </PDFWriter>
+
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(CMAKE_SHARED_MODULE_CREATE_CXX_FLAGS "${CMAKE_SHARED_MODULE_CREATE_CXX_FLAGS} -flat_namespace -undefined suppress")
 endif()

@@ -3,16 +3,15 @@
 
   Second-level plugin module for FAR Manager and MultiArc plugin
 
-  Copyright (c) 1996 Eugene Roshal
-  Copyrigth (c) 2000 FAR group
+  Copyright (c) 2017 Andrey Bachmaga lordakryl@gmail.com
 */
 
 #include <windows.h>
 #include <utils.h>
 #include <string.h>
 #include <pluginold.hpp>
+#include <sstream>
 
-/*
 #include "./PDF-Writer-master/PDFWriter/PDFParser.h"
 #include "./PDF-Writer-master/PDFWriter/InputFile.h"
 #include "./PDF-Writer-master/PDFWriter/PDFObject.h"
@@ -24,8 +23,6 @@
 #include "./PDF-Writer-master/PDFWriter/PDFStreamInput.h"
 
 using namespace PDFHummus;
-
-*/
 using namespace oldfar;
 #include "fmt.hpp"
 
@@ -57,9 +54,10 @@ using namespace oldfar;
 #endif
 */
 
-static HANDLE ArcHandle;
-static DWORD NextPosition,FileSize;
-
+static DWORD FileSize, CurPage;
+static unsigned long PagesCount;
+static PDFParser parser;
+static EStatusCode gStatus;
 
 void WINAPI UnixTimeToFileTime( DWORD time, FILETIME * ft );
 
@@ -72,49 +70,54 @@ BOOL WINAPI _export PDF_IsArchive(const char *Name,const unsigned char *Data,int
 {
   if (DataSize<26 || Data[0]!='%' || Data[1]!='P' || Data[2]!='D' || Data[3]!='F' || Data[4]!='-')
     return(FALSE);
-  //char Type=Data[7];
-  //if ((Type>'8' && Type<'1'))
-  //  return(FALSE);
   return(TRUE);
 }
 
 
 BOOL WINAPI _export PDF_OpenArchive(const char *Name,int *Type)
 {
-  ArcHandle=WINPORT(CreateFile)(MB2Wide(Name).c_str(),GENERIC_READ,FILE_SHARE_READ|FILE_SHARE_WRITE,
-                       NULL,OPEN_EXISTING,FILE_FLAG_SEQUENTIAL_SCAN,NULL);
-  if (ArcHandle==INVALID_HANDLE_VALUE)
-    return(FALSE);
-
-  *Type=0;
-
-  FileSize=WINPORT(GetFileSize)(ArcHandle,NULL);
-
-  NextPosition=4;
-/*
   InputFile pdfFile;
-  PDFParser parser;
+  std::string file_name( Name );
 
-  EStatusCode status = PDFHummus::eSuccess; //pdfFile.OpenFile(MB2Wide(Name));
+  EStatusCode status = pdfFile.OpenFile(file_name);
   if(status != PDFHummus::eSuccess)
     return(FALSE);
 
-  status = parser.StartPDFParsing(pdfFile.GetInputStream());
-*/
+  gStatus = parser.StartPDFParsing(pdfFile.GetInputStream());
+  if(gStatus != PDFHummus::eSuccess)
+    return(FALSE);
+  PagesCount = parser.GetPagesCount();
+  CurPage = 0;
+  parser.GetObjectsCount();
+
   return(TRUE);
 }
 
 
 int WINAPI _export PDF_GetArcItem(struct PluginPanelItem *Item,struct ArcItemInfo *Info)
 {
-  struct PdfHeader
-  {
-    BYTE Type;
-    DWORD PackSize;
-    DWORD UnpSize;
-    DWORD CRC;
-    DWORD FileTime;
-  } Header;
+    if (CurPage == PagesCount)
+        return GETARC_EOF;
+
+    std::string s = std::to_string(CurPage++);
+    std::string s_pages = "Page ";
+    char const* Path = s_pages.append(s).c_str();
+    strncpy(Item->FindData.cFileName, Path, sizeof(Item->FindData.cFileName));
+    Item->FindData.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
+    Item->CRC32 = 0;
+    //UnixTimeToFileTime(Header.FileTime,&Item->FindData.ftLastWriteTime);
+
+    // PDF Level
+    std::ostringstream os; os << parser.GetPDFLevel(); //std::to_string(parser.GetPDFLevel());
+    strncpy(Info->HostOS, os.str().c_str(), sizeof(Info->HostOS));
+
+    Item->FindData.nFileSizeHigh=0; // Always less than 4 GB
+    Item->FindData.nFileSizeLow=parser.GetObjectsCount();
+    Item->PackSize=Item->FindData.nFileSizeLow;
+
+    return(GETARC_SUCCESS);
+
+/*
   DWORD ReadSize;
   NextPosition=WINPORT(SetFilePointer)(ArcHandle,NextPosition,NULL,FILE_BEGIN);
   if (NextPosition==0xFFFFFFFF)
@@ -153,12 +156,13 @@ int WINAPI _export PDF_GetArcItem(struct PluginPanelItem *Item,struct ArcItemInf
   Item->FindData.nFileSizeHigh=0;
   Item->PackSize=Header.PackSize;
   return(GETARC_SUCCESS);
+*/
 }
 
 
 BOOL WINAPI _export PDF_CloseArchive(struct ArcInfo *Info)
 {
-  return(WINPORT(CloseHandle)(ArcHandle));
+  return(TRUE);
 }
 
 BOOL WINAPI _export PDF_GetFormatName(int Type,char *FormatName,char *DefaultExt)
