@@ -8,9 +8,10 @@
 
 #include <windows.h>
 #include <utils.h>
-#include <string.h>
 #include <pluginold.hpp>
 #include <sstream>
+#include <iostream>
+#include <string>
 
 #include "./PDF-Writer-master/PDFWriter/PDFParser.h"
 #include "./PDF-Writer-master/PDFWriter/InputFile.h"
@@ -24,6 +25,7 @@
 
 using namespace PDFHummus;
 using namespace oldfar;
+using namespace std;
 #include "fmt.hpp"
 
 
@@ -54,10 +56,97 @@ using namespace oldfar;
 #endif
 */
 
-static DWORD FileSize, CurPage;
-static unsigned long PagesCount;
-static PDFParser parser;
-static EStatusCode gStatus;
+class PDFTraverser
+{
+    InputFile pdfFile;
+    PDFParser pdfParser;
+    PDFDictionary* page;
+    PDFObject* contents;
+    BOOL valid;
+    unsigned int CurPage;
+
+private:
+    string BuildPath(unsigned int pageNr, string objName)
+    {
+        return string("Page ")
+            + to_string(pageNr+1)
+            + string("_ID")
+            + to_string(pdfParser.GetPageObjectID(pageNr))
+            + string("/")
+            + objName;
+    }
+public:
+    PDFTraverser(const char *path) : valid(FALSE), page(NULL), contents(NULL), CurPage(0)
+    {
+        string file_name(path);
+        valid = TRUE;
+
+        if (pdfFile.OpenFile(file_name) != PDFHummus::eSuccess)
+            valid = FALSE;
+        if (valid && pdfParser.StartPDFParsing(pdfFile.GetInputStream()) != PDFHummus::eSuccess)
+            valid = FALSE;
+    }
+
+    ~PDFTraverser()
+    {
+        //pdfFile.CloseFile();  if (NULL != pdfParser) delete pdfParser;
+        if(NULL != contents) delete contents;
+        if(NULL != page) delete page;
+        valid = FALSE;
+    }
+
+    int Next(struct PluginPanelItem *Item, struct ArcItemInfo *Info)
+    {
+        if (!valid)
+            return GETARC_READERROR;
+        if (CurPage > pdfParser.GetPagesCount() - 1)
+            return GETARC_EOF;
+
+        if(NULL == page) {
+            page = pdfParser.ParsePage(CurPage);
+            contents = (pdfParser.QueryDictionaryObject(page, "Contents"));
+        }
+        bool nextPage = true;
+        if(NULL == contents) {
+            nextPage = true;
+        } else {
+            //showPageContent(pdfParser, contents, pdfFile);
+        }
+
+        string sPath = BuildPath(CurPage, "ttt");
+        strncpy(Item->FindData.cFileName, sPath.c_str(), sizeof(Item->FindData.cFileName));
+        Item->FindData.dwFileAttributes = FILE_ATTRIBUTE_ARCHIVE;
+
+        ostringstream os; os << pdfParser.GetPDFLevel();
+        strncpy(Info->HostOS, os.str().c_str(), sizeof(Info->HostOS));
+
+        Item->FindData.nFileSizeHigh=0; // Always less than 4 GB
+        Item->FindData.nFileSizeLow=pdfParser.GetObjectsCount();
+        Item->PackSize=Item->FindData.nFileSizeLow;
+
+        if (nextPage) {
+            CurPage++;
+            if(NULL != page) delete page;
+            if(NULL != contents) delete contents;
+        }
+        return GETARC_SUCCESS;
+    }
+
+    BOOL Valid()
+    {
+        return valid;
+    }
+};
+
+///////////////////////////////////
+
+static PDFTraverser *s_selected_traverser = NULL;
+
+void showPagesInfo(PDFParser&,InputFile&,EStatusCode);
+void checkXObjectRef(PDFParser&,RefCountPtr<PDFDictionary>);
+void showXObjectsPerPageInfo(PDFParser&,PDFObjectCastPtr<PDFDictionary>);
+void showPageContent(PDFParser&,RefCountPtr<PDFObject>,InputFile&);
+void showContentStream(PDFStreamInput*,IByteReaderWithPosition*,PDFParser&);
 
 void WINAPI UnixTimeToFileTime( DWORD time, FILETIME * ft );
 
@@ -74,95 +163,130 @@ BOOL WINAPI _export PDF_IsArchive(const char *Name,const unsigned char *Data,int
 }
 
 
-BOOL WINAPI _export PDF_OpenArchive(const char *Name,int *Type)
+BOOL WINAPI _export PDF_OpenArchive(const char *Name, int *Type)
 {
-  InputFile pdfFile;
-  std::string file_name( Name );
+    PDFTraverser *t = new PDFTraverser(Name);
+    if (!t->Valid())
+    {
+        delete t;
+        return (FALSE);
+    }
 
-  EStatusCode status = pdfFile.OpenFile(file_name);
-  if(status != PDFHummus::eSuccess)
-    return(FALSE);
-
-  gStatus = parser.StartPDFParsing(pdfFile.GetInputStream());
-  if(gStatus != PDFHummus::eSuccess)
-    return(FALSE);
-  PagesCount = parser.GetPagesCount();
-  CurPage = 0;
-  parser.GetObjectsCount();
-
-  return(TRUE);
+    if (NULL != s_selected_traverser)
+        delete s_selected_traverser;
+    s_selected_traverser = t;
+    return (TRUE);
 }
 
 
+//    showPagesInfo(parser,pdfFile,status);
+
+void showPagesInfo(PDFParser& parser, InputFile& pdfFile, EStatusCode status)
+{
+    for(unsigned long i=0; i < parser.GetPagesCount() && eSuccess == status; ++i) {
+        RefCountPtr<PDFDictionary> page(parser.ParsePage(i));
+        checkXObjectRef(parser,page);
+        RefCountPtr<PDFObject> contents(parser.QueryDictionaryObject(page.GetPtr(),"Contents"));
+        if(!contents) {
+                cout << "No contents for this page\n"; continue;
+        }
+        showPageContent(parser,contents,pdfFile);
+    }
+}
+
+void checkXObjectRef(PDFParser& parser,RefCountPtr<PDFDictionary> page)
+{
+    PDFObjectCastPtr<PDFDictionary> resources(parser.QueryDictionaryObject(page.GetPtr(),"Resources"));
+    if(!resources)
+    {
+        wcout << "No XObject in this page\n";
+        return;
+    }
+
+    PDFObjectCastPtr<PDFDictionary> xobjects(parser.QueryDictionaryObject(resources.GetPtr(),"XObject"));
+    if(!xobjects)
+    {
+        wcout << "No XObject in this page\n";
+        return;
+    }
+
+    cout << "Displaying XObjects information for this page:\n";
+    showXObjectsPerPageInfo(parser,xobjects);
+}
+
+void showXObjectsPerPageInfo(PDFParser& parser,PDFObjectCastPtr<PDFDictionary> xobjects)
+{
+    RefCountPtr<PDFName> key;
+    PDFObjectCastPtr<PDFIndirectObjectReference> value;
+    MapIterator<PDFNameToPDFObjectMap> it = xobjects->GetIterator();
+    while(it.MoveNext())
+    {
+        key = it.GetKey();
+        value = it.GetValue();
+
+        cout << "XObject named " << key->GetValue().c_str() << " is object " << value->mObjectID << " of type ";
+
+        PDFObjectCastPtr<PDFStreamInput> xobject(parser.ParseNewObject(value->mObjectID));
+        PDFObjectCastPtr<PDFDictionary> xobjectDictionary(xobject->QueryStreamDictionary());
+        PDFObjectCastPtr<PDFName> typeOfXObject = xobjectDictionary->QueryDirectObject("Subtype");
+
+        cout << typeOfXObject->GetValue().c_str() << "\n";
+    }
+}
+
+void showPageContent(PDFParser& parser, RefCountPtr<PDFObject> contents, InputFile& pdfFile)
+{
+    if(contents->GetType() == PDFObject::ePDFObjectArray)
+    {
+        PDFObjectCastPtr<PDFIndirectObjectReference> streamReferences;
+        SingleValueContainerIterator<PDFObjectVector> itContents = ((PDFArray*)contents.GetPtr())->GetIterator();
+        // array of streams
+        while(itContents.MoveNext())
+        {
+            streamReferences = itContents.GetItem();
+            PDFObjectCastPtr<PDFStreamInput> stream = parser.ParseNewObject(streamReferences->mObjectID);
+            showContentStream(stream.GetPtr(),pdfFile.GetInputStream(),parser);
+        }
+    }
+    else
+    {
+        // stream
+        showContentStream((PDFStreamInput*)contents.GetPtr(),pdfFile.GetInputStream(),parser);
+    }
+}
+
+void showContentStream(PDFStreamInput* inStream,IByteReaderWithPosition* inPDFStream,PDFParser& inParser)
+{
+    IByteReader* streamReader = inParser.CreateInputStreamReader(inStream);
+    Byte buffer[1000];
+    if(streamReader)
+    {
+        inPDFStream->SetPosition(inStream->GetStreamContentStart());
+        while(streamReader->NotEnded())
+        {
+            LongBufferSizeType readAmount = streamReader->Read(buffer,1000);
+            cout.write((const char*)buffer,readAmount);
+        }
+        cout << "\n";
+    }
+    else
+        cout << "Unable to read content stream\n";
+    delete streamReader;
+}
+
 int WINAPI _export PDF_GetArcItem(struct PluginPanelItem *Item,struct ArcItemInfo *Info)
 {
-    if (CurPage == PagesCount)
-        return GETARC_EOF;
-
-    std::string s = std::to_string(CurPage++);
-    std::string s_pages = "Page ";
-    char const* Path = s_pages.append(s).c_str();
-    strncpy(Item->FindData.cFileName, Path, sizeof(Item->FindData.cFileName));
-    Item->FindData.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
-    Item->CRC32 = 0;
-    //UnixTimeToFileTime(Header.FileTime,&Item->FindData.ftLastWriteTime);
-
-    // PDF Level
-    std::ostringstream os; os << parser.GetPDFLevel(); //std::to_string(parser.GetPDFLevel());
-    strncpy(Info->HostOS, os.str().c_str(), sizeof(Info->HostOS));
-
-    Item->FindData.nFileSizeHigh=0; // Always less than 4 GB
-    Item->FindData.nFileSizeLow=parser.GetObjectsCount();
-    Item->PackSize=Item->FindData.nFileSizeLow;
-
-    return(GETARC_SUCCESS);
-
-/*
-  DWORD ReadSize;
-  NextPosition=WINPORT(SetFilePointer)(ArcHandle,NextPosition,NULL,FILE_BEGIN);
-  if (NextPosition==0xFFFFFFFF)
-    return(GETARC_READERROR);
-  if (NextPosition>FileSize)
-    return(GETARC_UNEXPEOF);
-  if (!WINPORT(ReadFile)(ArcHandle,&Header,sizeof(Header),&ReadSize,NULL))
-    return(GETARC_READERROR);
-  if (ReadSize==0)
-    return(GETARC_EOF);
-  char Path[3*NM],Name[NM];
-  if (!WINPORT(ReadFile)(ArcHandle,Path,sizeof(Path),&ReadSize,NULL) || ReadSize==0)
-    return(GETARC_READERROR);
-  Path[NM-1]=0;
-  int PathLength=strlen(Path)+1;
-  strncpy(Name,Path+PathLength,sizeof(Name));
-  int Length=PathLength+strlen(Name)+1;
-  DWORD PrevPosition=NextPosition;
-  NextPosition+=sizeof(Header)+Length+Path[Length]+1+Header.PackSize;
-  if (PrevPosition>=NextPosition)
-    return(GETARC_BROKEN);
-  char *EndSym=strrchr(Path,255);
-  if (EndSym!=NULL)
-    *EndSym=0;
-  if (*Path)
-    strcat(Path,"/");
-  strcat(Path,Name);
-  for (int I=0;Path[I]!=0;I++)
-    if ((unsigned char)Path[I]==0xff)
-      Path[I]='/';
-  strncpy(Item->FindData.cFileName,Path,sizeof(Item->FindData.cFileName));
-  Item->FindData.dwFileAttributes=(Header.Type & 0xf)==0xe ? FILE_ATTRIBUTE_DIRECTORY:0;
-  Item->CRC32=Header.CRC;
-  UnixTimeToFileTime(Header.FileTime,&Item->FindData.ftLastWriteTime);
-  Item->FindData.nFileSizeLow=Header.UnpSize;
-  Item->FindData.nFileSizeHigh=0;
-  Item->PackSize=Header.PackSize;
-  return(GETARC_SUCCESS);
-*/
+    if (!s_selected_traverser)
+        return GETARC_READERROR;
+    return s_selected_traverser->Next(Item, Info);
 }
 
 
 BOOL WINAPI _export PDF_CloseArchive(struct ArcInfo *Info)
 {
-  return(TRUE);
+    if (NULL != s_selected_traverser)
+        delete s_selected_traverser;
+    return(TRUE);
 }
 
 BOOL WINAPI _export PDF_GetFormatName(int Type,char *FormatName,char *DefaultExt)

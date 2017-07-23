@@ -25,7 +25,7 @@ else(NOT PDFHUMMUS_NO_TIFF)
 endif(NOT PDFHUMMUS_NO_TIFF)
 
 include_directories (${FREETYPE_INCLUDE_DIRS})
-add_library (PDFWriter 
+add_library (PDFWriter #SHARED
 #sources
 AbstractContentContext.cpp
 AbstractWrittenFont.cpp
