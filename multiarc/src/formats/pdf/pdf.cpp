@@ -56,12 +56,38 @@ using namespace std;
 #endif
 */
 
+class PDFTreeIterator {
+    PDFObject *inObject;
+public:
+    PDFTreeIterator(PDFObject &obj, PDFParser &pdfParser)
+    {
+        inObject = &obj;
+    }
+    ~PDFTreeIterator()
+    {
+
+    }
+
+    BOOL Next() {
+        return FALSE;
+    }
+
+    string GetName() {
+        return string(PDFObject::scPDFObjectTypeLabel(inObject->GetType()));
+    }
+
+    string GetPath(string PrevPath) {
+        return PrevPath + "/" + GetName();
+    }
+};
+
 class PDFTraverser
 {
     InputFile pdfFile;
     PDFParser pdfParser;
     PDFDictionary* page;
     PDFObject* contents;
+    MapIterator<PDFNameToPDFObjectMap> *it;
     BOOL valid;
     unsigned int CurPage;
 
@@ -76,7 +102,7 @@ private:
             + objName;
     }
 public:
-    PDFTraverser(const char *path) : valid(FALSE), page(NULL), contents(NULL), CurPage(0)
+    PDFTraverser(const char *path) : valid(FALSE), page(NULL), it(NULL), contents(NULL), CurPage(0)
     {
         string file_name(path);
         valid = TRUE;
@@ -87,11 +113,15 @@ public:
             valid = FALSE;
     }
 
-    ~PDFTraverser()
-    {
-        //pdfFile.CloseFile();  if (NULL != pdfParser) delete pdfParser;
-        if(NULL != contents) delete contents;
-        if(NULL != page) delete page;
+    ~PDFTraverser() {
+        if (NULL != contents) {
+            delete contents;
+        }
+        if (NULL != page) {
+            delete page;
+        }
+        if (NULL != it)
+            delete it;
         valid = FALSE;
     }
 
@@ -102,20 +132,32 @@ public:
         if (CurPage > pdfParser.GetPagesCount() - 1)
             return GETARC_EOF;
 
-        if(NULL == page) {
+        if (NULL == page) {
             page = pdfParser.ParsePage(CurPage);
-            contents = (pdfParser.QueryDictionaryObject(page, "Contents"));
+            /*
+            contents = pdfParser.QueryDictionaryObject(page, "Contents"); */
+            PDFObjectCastPtr<PDFDictionary> resources(pdfParser.QueryDictionaryObject(page, "Resources"));
+            if (resources != NULL) {
+                PDFObjectCastPtr<PDFDictionary> xobjects(pdfParser.QueryDictionaryObject(resources.GetPtr(),"XObject"));
+                MapIterator<PDFNameToPDFObjectMap> itr = xobjects->GetIterator();
+                if (itr.MoveNext())
+                    itr.GetKey();
+            } // */
         }
+
+
         bool nextPage = true;
-        if(NULL == contents) {
+        if (!contents) {
             nextPage = true;
+            Item->FindData.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
         } else {
+            Item->FindData.dwFileAttributes = FILE_ATTRIBUTE_ARCHIVE;
             //showPageContent(pdfParser, contents, pdfFile);
         }
 
+
         string sPath = BuildPath(CurPage, "ttt");
         strncpy(Item->FindData.cFileName, sPath.c_str(), sizeof(Item->FindData.cFileName));
-        Item->FindData.dwFileAttributes = FILE_ATTRIBUTE_ARCHIVE;
 
         ostringstream os; os << pdfParser.GetPDFLevel();
         strncpy(Info->HostOS, os.str().c_str(), sizeof(Info->HostOS));
@@ -126,8 +168,14 @@ public:
 
         if (nextPage) {
             CurPage++;
-            if(NULL != page) delete page;
-            if(NULL != contents) delete contents;
+            if(NULL != page) {
+                delete page;
+                page = NULL;
+            }
+            if(NULL != contents) {
+                delete contents;
+                contents = NULL;
+            }
         }
         return GETARC_SUCCESS;
     }
