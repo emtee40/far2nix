@@ -1,6 +1,8 @@
 name: Artifacts
 
-on: [push]
+on:
+  workflow_dispatch:
+#  push
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
