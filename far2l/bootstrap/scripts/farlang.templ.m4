@@ -2520,6 +2520,17 @@ upd:"AutoComplete"
 "&Автозавершення"
 "С&амазавяршэнне"
 
+ConfigCmdlineVTLogLimit
+"Максимум строк в &логе вывода:"
+"Maximum terminal &log lines:"
+upd:"Maximum terminal &log lines:"
+upd:"Maximum terminal &log lines:"
+upd:"Maximum terminal &log lines:"
+upd:"Maximum terminal &log lines:"
+upd:"Maximum terminal &log lines:"
+"Максимум рядків &логії виводу:"
+"Максімум радкоў &логу вываду:"
+
 ConfigCmdlineWaitKeypress
 "&Ожидать нажатие перед закрытием"
 "&Wait keypress before close"
@@ -14596,38 +14607,27 @@ l:
 "Вимкнення віртуального пристрою"
 "Адключэнне віртуальнай прылады"
 
-ChangeSUBSTDisconnectDriveQuestion
-"Отключить SUBST-диск %c:?"
-"Disconnect SUBST-disk %c:?"
-"Odpojit SUBST-disk %c:?"
-"Substlaufwerk %c: trennen?"
-"Törli %c: virtuális meghajtót?"
-"Odłączyć dysk SUBST %c:?"
-"Desconectarse de disco sustituido %c:?"
-"Вимкнути SUBST-диск %c:?"
-"Адключыць SUBST-дыск %c:?"
+ClearTerminalTitle
+"Очистка терминала"
+"Clear terminal"
+upd:"Clear terminal"
+upd:"Clear terminal"
+upd:"Clear terminal"
+upd:"Clear terminal"
+upd:"Clear terminal"
+"Очищення терміналу"
+"Ачыстка тэрмінала"
 
-ChangeVHDDisconnectDriveTitle
-"Отсоединение виртуального диска"
-"Virtual disk detaching"
-upd:"Virtual disk detaching"
-upd:"Virtual disk detaching"
-upd:"Virtual disk detaching"
-upd:"Virtual disk detaching"
-upd:"Virtual disk detaching"
-"Від'єднання віртуального диска"
-"Адлучэнне ўяўнага дыску"
-
-ChangeVHDDisconnectDriveQuestion
-"Отсоединить виртуальный диск %c:?"
-"Detach virtual disk %c:?"
-upd:"Detach virtual disk %c:?"
-upd:"Detach virtual disk %c:?"
-upd:"Detach virtual disk %c:?"
-upd:"Detach virtual disk %c:?"
-upd:"Detach virtual disk %c:?"
-"Від'єднати віртуальний диск %c:?"
-"Адлучыць віртуальны дыск %c:?"
+ClearTerminalQuestion
+"Очистить экран и историю терминала?"
+"Clear terminal screen and history?"
+upd:"Clear terminal screen and history?"
+upd:"Clear terminal screen and history?"
+upd:"Clear terminal screen and history?"
+upd:"Clear terminal screen and history?"
+upd:"Clear terminal screen and history?"
+"Очистити екран та історію терміналу?"
+"Ачысціць экран і гісторыю тэрмінала?"
 
 ChangeHotPlugDisconnectDriveTitle
 l:
@@ -15673,15 +15673,26 @@ upd:"RRRRR%cMM%cDD gg%cmm%css%cms"
 "ГГГГГ%cММ%cДД чч%cмм%cсс%cмс"
 
 SetAttrBriefInfo
-"&Краткое описание"
-"Brief &info"
-upd:"Brief &info"
-upd:"Brief &info"
-upd:"Brief &info"
-upd:"Brief &info"
-upd:"Brief &info"
-upd:"Системні &властивості"
-"&Каротае апісанне"
+"&Описание:"
+"&Info:"
+upd:"&Info:"
+upd:"&Info:"
+upd:"&Info:"
+upd:"&Info:"
+upd:"&Info:"
+"&Опис:"
+"&Апісанне:"
+
+SetAttrLinkDest
+"&Ссылка:"
+"&Symlink:"
+upd:"&Symlink:"
+upd:"&Symlink:"
+upd:"&Symlink:"
+upd:"&Symlink:"
+upd:"&Symlink:"
+"По&силання:"
+"&Спасылка:"
 
 SetAttrSetting
 l:
@@ -17305,27 +17316,16 @@ SetConfirmRemoveConnection
 "&Відключення мережного пристрою"
 "&Адключэнне сеткавай прылады"
 
-SetConfirmRemoveSUBST
-"Отключение SUBST-диска"
-"Disconnect &SUBST-disk"
-"Odpojení SUBST-d&isku"
-"Trennen von &Substlaufwerken"
-"Virt&uális meghajtó törlése"
-"Odłączenie dysku &SUBST"
-"Desconectar disco &sustituido"
-"Відключення SUBST-диска"
-"Адключэнне SUBST-дыску"
-
-SetConfirmDetachVHD
-"Отсоедиение виртуального диска"
-"Detach virtual disk"
-upd:"Detach virtual disk"
-upd:"Detach virtual disk"
-upd:"Detach virtual disk"
-upd:"Detach virtual disk"
-upd:"Detach virtual disk"
-"Від'єднання віртуального диска"
-"Адлучэнне виртуальнага дыску"
+SetConfirmClearVT
+"Очистка &терминала"
+"Clear &terminal"
+upd:"Clear &terminal"
+upd:"Clear &terminal"
+upd:"Clear &terminal"
+upd:"Clear &terminal"
+upd:"Clear &terminal"
+"Oчищення &терміналу"
+"Ачыстка &тэрмінала"
 
 SetConfirmRemoveHotPlug
 "Отключение HotPlug-у&стройства"

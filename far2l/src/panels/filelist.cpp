@@ -92,6 +92,8 @@ static int ListSortMode, ListSortOrder, ListSortGroups, ListSelectedFirst, ListD
 static int ListPanelMode, ListNumericSort, ListCaseSensitiveSort;
 static HANDLE hSortPlugin;
 
+#define SYMLINKS_BACKLOG_LIMIT 128	// hardcoded for now, until smbd will want to change this..
+
 enum SELECT_MODES
 {
 	SELECT_INVERT     = 0,
@@ -2026,14 +2028,24 @@ int FileList::ProcessKey(int Key)
 			NewActivePanel->Show();
 		}
 			return TRUE;
-		case KEY_CTRLPGDN:
-		case KEY_CTRLNUMPAD3:
+
+		case KEY_CTRLSHIFTPGUP:
+		case KEY_CTRLSHIFTNUMPAD9:
+			RevertSymlinkTraverse();
+			return TRUE;
+
 		case KEY_CTRLSHIFTPGDN:
 		case KEY_CTRLSHIFTNUMPAD3:
+			if (TrySymlinkTraverse())
+				return TRUE;
+			// fall through
+
+		case KEY_CTRLPGDN:
+		case KEY_CTRLNUMPAD3:
 			ProcessEnter(0, 0, !(Key & KEY_SHIFT), false, OFP_ALTERNATIVE);
 			return TRUE;
-		default:
 
+		default:
 			if (((Key >= KEY_ALT_BASE + 0x01 && Key <= KEY_ALT_BASE + 65535)
 						|| (Key >= KEY_ALTSHIFT_BASE + 0x01 && Key <= KEY_ALTSHIFT_BASE + 65535))
 					&& (Key & ~KEY_ALTSHIFT_BASE) != KEY_BS && (Key & ~KEY_ALTSHIFT_BASE) != KEY_TAB
@@ -2064,6 +2076,49 @@ int FileList::ProcessKey(int Key)
 	return FALSE;
 }
 
+bool FileList::TrySymlinkTraverse()
+{
+	if (CurFile >= ListData.Count() || PanelMode == PLUGIN_PANEL
+			|| (ListData[CurFile]->FileAttr & FILE_ATTRIBUTE_REPARSE_POINT) == 0) {
+		return false;
+	}
+
+	FARString symlink_pathname = ListData[CurFile]->strName;
+	FARString dest_pathname;
+	if (!ReadSymlink(symlink_pathname, dest_pathname)) {
+		return false;
+	}
+	ConvertNameToFull(symlink_pathname);
+	ConvertNameToFull(dest_pathname);
+	FARString dest_path = dest_pathname;
+	if (dest_path != L"/") {
+		CutToSlash(dest_path);
+	}
+	if (ProcessEnter_ChangeDir(dest_path, PointToName(dest_pathname))) {
+		while (_symlinks_backlog.size() > SYMLINKS_BACKLOG_LIMIT) {
+			_symlinks_backlog.pop_front();
+		}
+		_symlinks_backlog.emplace_back(symlink_pathname.GetMB());
+	}
+	return true;
+}
+
+void FileList::RevertSymlinkTraverse()
+{
+	if (_symlinks_backlog.empty()) {
+		fprintf(stderr, "%s: symlinks backlog is empty\n", __FUNCTION__);
+		return;
+	}
+
+	FARString symlink_path = _symlinks_backlog.back();
+	FARString symlink_name = PointToName(symlink_path);
+	CutToSlash(symlink_path);
+	if (!ProcessEnter_ChangeDir(symlink_path, symlink_name)) {
+		fprintf(stderr, "%s: failed to revert to '%s'\n", __FUNCTION__, _symlinks_backlog.back().c_str());
+	}
+	_symlinks_backlog.pop_back();
+}
+
 void FileList::Select(FileListItem *SelPtr, bool Selection)
 {
 	if (!TestParentFolderName(SelPtr->strName) && SelPtr->Selected != Selection) {
@@ -2078,6 +2133,65 @@ void FileList::Select(FileListItem *SelPtr, bool Selection)
 			SelFileSize-= SelPtr->FileSize;
 		}
 	}
+}
+
+bool FileList::ProcessEnter_ChangeDir(const wchar_t *dir, const wchar_t *select_file)
+{
+	OpenPluginInfo orig_plugin_info = {sizeof(OpenPluginInfo), 0};
+	FARString orig_plugin_name, orig_dir, orig_sel_name;
+	GetCurDirPluginAware(orig_dir);
+
+	if (CurFile < ListData.Count()) {
+		orig_sel_name = ListData[CurFile]->strName;
+	}
+
+	HANDLE orig_plugin_handle = GetPluginHandle();
+	if (orig_plugin_handle != INVALID_HANDLE_VALUE) {
+		orig_plugin_name = CtrlObject->Plugins.GetPluginModuleName(orig_plugin_handle);
+		CtrlObject->Plugins.GetOpenPluginInfo(orig_plugin_handle, &orig_plugin_info);
+	}
+
+	const auto check_fullscreen = IsFullScreen();
+	//"this" может быть удалён в ChangeDir
+	if (!ChangeDir(dir)) {
+//		Message(MSG_WARNING, 1, Msg::ErrorPathNotFound, dir, Msg::Ok);
+		return false;
+	}
+
+	Panel *active_panel = CtrlObject->Cp()->ActivePanel;
+
+	bool not_found = false;
+	if (select_file && *select_file) {
+		not_found = (!active_panel->GoToFile(select_file, TRUE));
+	}
+	active_panel->Show();
+
+	bool dir_changed = true;
+	if (not_found) {
+		int r = Message(MSG_WARNING, 2, Msg::ErrorFileNotFound, select_file, Msg::Ok, Msg::Cancel);
+		if (r != 0)
+		{ // Cancel means go back
+			fprintf(stderr, "Going back to '%ls' @ '%ls'\n", orig_dir.CPtr(), orig_plugin_name.CPtr());
+			if (!orig_plugin_name.IsEmpty()) {
+				auto plugin = CtrlObject->Plugins.GetPlugin(orig_plugin_name);
+				const wchar_t *host_file = (orig_plugin_info.HostFile && *orig_plugin_info.HostFile)
+					? orig_plugin_info.HostFile : nullptr;
+				SetLocation_Plugin(host_file != nullptr, plugin,
+					orig_plugin_info.CurDir ? orig_plugin_info.CurDir : L"", host_file, 0);
+
+			} else if (!ProcessEnter_ChangeDir(orig_dir, PointToName(orig_sel_name))) {
+				fprintf(stderr, "%s: failed to cd to '%ls'\n", __FUNCTION__, orig_sel_name.CPtr());
+			}
+			active_panel = CtrlObject->Cp()->ActivePanel;
+			dir_changed = false;
+		}
+	}
+
+	if (check_fullscreen != active_panel->IsFullScreen()) {
+		CtrlObject->Cp()->GetAnotherPanel(active_panel)->Show();
+	}
+
+	return dir_changed;
 }
 
 void FileList::ProcessEnter(bool EnableExec, bool SeparateWindow, bool EnableAssoc, bool RunAs,
@@ -2125,18 +2239,8 @@ void FileList::ProcessEnter(bool EnableExec, bool SeparateWindow, bool EnableAss
 			EscapeSpace(strFullPath);
 			Execute(strFullPath, SeparateWindow, true);
 		} else {
-			int CheckFullScreen = IsFullScreen();
-
-			ChangeDir(CurPtr->strName);
-
-			//"this" может быть удалён в ChangeDir
-			Panel *ActivePanel = CtrlObject->Cp()->ActivePanel;
-
-			if (CheckFullScreen != ActivePanel->IsFullScreen()) {
-				CtrlObject->Cp()->GetAnotherPanel(ActivePanel)->Show();
-			}
-
-			ActivePanel->Show();
+			//"this" может быть удалён в ProcessEnter_GoToDir
+			ProcessEnter_ChangeDir(CurPtr->strName);
 		}
 	} else {
 		bool PluginMode =
@@ -2822,18 +2926,18 @@ void FileList::ChangeDirectoriesFirst(int Mode)
 	Show();
 }
 
-int FileList::GoToFile(long idxItem)
+bool FileList::GoToFile(long idxItem)
 {
 	if (idxItem >= 0 && idxItem < ListData.Count()) {
 		CurFile = idxItem;
 		CorrectPosition();
-		return TRUE;
+		return true;
 	}
 
-	return FALSE;
+	return false;
 }
 
-int FileList::GoToFile(const wchar_t *Name, BOOL OnlyPartName)
+bool FileList::GoToFile(const wchar_t *Name, BOOL OnlyPartName)
 {
 	return GoToFile(FindFile(Name, OnlyPartName));
 }

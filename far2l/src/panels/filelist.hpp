@@ -43,6 +43,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "FSNotify.h"
 #include <memory>
 #include <vector>
+#include <deque>
 
 struct FileListItem
 {
@@ -191,6 +192,7 @@ private:
 	uint64_t FreeDiskSize;
 	clock_t LastUpdateTime;
 	int Height, Columns;
+	std::deque<std::string> _symlinks_backlog;
 
 	int ColumnsInGlobal;
 
@@ -222,13 +224,13 @@ private:
 	int GetShowColor(int Position, int ColorType);
 	void ShowSelectedSize();
 	void ShowTotalSize(OpenPluginInfo &Info);
-	int ConvertName(const wchar_t *SrcName, FARString &strDest, int MaxLength, int RightAlign, int ShowStatus,
-			DWORD dwFileAttr);
+	int ConvertName(const wchar_t *SrcName, FARString &strDest, int MaxLength, int RightAlign, int ShowStatus, DWORD dwFileAttr);
 
 	void Select(FileListItem *SelPtr, bool Selection);
 	long SelectFiles(int Mode, const wchar_t *Mask = nullptr);
 	void ProcessEnter(bool EnableExec, bool SeparateWindow, bool EnableAssoc = true, bool RunAs = false,
 			OPENFILEPLUGINTYPE Type = OFP_NORMAL);
+	bool ProcessEnter_ChangeDir(const wchar_t *dir, const wchar_t *select_file = nullptr);
 	// ChangeDir возвращает FALSE, eсли не смогла выставить заданный путь
 	BOOL ChangeDir(const wchar_t *NewDir, BOOL IsUpdated = TRUE);
 	void CountDirSize(DWORD PluginFlags);
@@ -241,8 +243,7 @@ private:
 
 	void MoveSelection(ListDataVec &NewList, ListDataVec &OldList);
 	virtual int GetSelCount();
-	virtual int
-	GetSelName(FARString *strName, DWORD &FileAttr, DWORD &FileMode, FAR_FIND_DATA_EX *fde = nullptr);
+	virtual int GetSelName(FARString *strName, DWORD &FileAttr, DWORD &FileMode, FAR_FIND_DATA_EX *fde = nullptr);
 	virtual void UngetSelName();
 	virtual void ClearLastGetSelection();
 
@@ -279,6 +280,8 @@ private:
 	void ProcessCopyKeys(int Key);
 	void ReadSortGroups(bool UpdateFilterCurrentTime = true);
 	int ProcessOneHostFile(int Idx);
+	bool TrySymlinkTraverse();
+	void RevertSymlinkTraverse();
 
 protected:
 	virtual void ClearAllItem();
@@ -333,8 +336,8 @@ public:
 	virtual bool FindPartName(const wchar_t *Name, int Next, int Direct = 1, int ExcludeSets = 0);
 	long FindFile(const char *Name, BOOL OnlyPartName = FALSE);
 
-	virtual int GoToFile(long idxItem);
-	virtual int GoToFile(const wchar_t *Name, BOOL OnlyPartName = FALSE);
+	virtual bool GoToFile(long idxItem);
+	virtual bool GoToFile(const wchar_t *Name, BOOL OnlyPartName = FALSE);
 	virtual long FindFile(const wchar_t *Name, BOOL OnlyPartName = FALSE);
 
 	virtual bool IsSelected(const wchar_t *Name);

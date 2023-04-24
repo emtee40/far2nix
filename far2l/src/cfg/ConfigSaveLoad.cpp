@@ -246,6 +246,7 @@ public:
 	{true,  NSecCmdline, "EditBlock", &Opt.CmdLine.EditBlock, 0},
 	{true,  NSecCmdline, "AutoComplete", &Opt.CmdLine.AutoComplete, 1},
 	{true,  NSecCmdline, "WaitKeypress", &Opt.CmdLine.WaitKeypress, 1},
+	{true,  NSecCmdline, "VTLogLimit", &Opt.CmdLine.VTLogLimit, 5000},
 
 	{true,  NSecInterface, "Mouse", &Opt.Mouse, 1},
 	{false, NSecInterface, "UseVk_oem_x", &Opt.UseVk_oem_x, 1},
@@ -274,7 +275,7 @@ public:
 	{true,  NSecInterface, "CopyShowTotal", &Opt.CMOpt.CopyShowTotal, 1},
 	{true,  NSecInterface, "DelShowTotal", &Opt.DelOpt.DelShowTotal, 0},
 	{true,  NSecInterface, "WindowTitle", &Opt.strWindowTitle, L"%State - FAR2L %Ver %Backend %User@%Host"}, // %Platform 
-	{true,  NSecInterfaceCompletion, "Exceptions", &Opt.AutoComplete.Exceptions, L"git*reset*--hard;*://*:*@*"},
+	{true,  NSecInterfaceCompletion, "Exceptions", &Opt.AutoComplete.Exceptions, L"git*reset*--hard;*://*:*@*;\" *\""},
 	{true,  NSecInterfaceCompletion, "ShowList", &Opt.AutoComplete.ShowList, 1},
 	{true,  NSecInterfaceCompletion, "ModalList", &Opt.AutoComplete.ModalList, 0},
 	{true,  NSecInterfaceCompletion, "Append", &Opt.AutoComplete.AppendCompletion, 0},
@@ -447,8 +448,7 @@ public:
 	{true,  NSecConfirmations, "DeleteFolder", &Opt.Confirm.DeleteFolder, 1},
 	{true,  NSecConfirmations, "Esc", &Opt.Confirm.Esc, 1},
 	{true,  NSecConfirmations, "RemoveConnection", &Opt.Confirm.RemoveConnection, 1},
-	{true,  NSecConfirmations, "RemoveSUBST", &Opt.Confirm.RemoveSUBST, 1},
-	{true,  NSecConfirmations, "DetachVHD", &Opt.Confirm.DetachVHD, 1},
+	{true,  NSecConfirmations, "ClearVT", &Opt.Confirm.ClearVT, 1},
 	{true,  NSecConfirmations, "RemoveHotPlug", &Opt.Confirm.RemoveHotPlug, 1},
 	{true,  NSecConfirmations, "AllowReedit", &Opt.Confirm.AllowReedit, 1},
 	{true,  NSecConfirmations, "HistoryClear", &Opt.Confirm.HistoryClear, 1},

@@ -160,9 +160,8 @@ struct Confirmation
 	*/
 	int AllowReedit;
 	int HistoryClear;
-	int RemoveSUBST;
+	int ClearVT;
 	int RemoveHotPlug;
-	int DetachVHD;
 };
 
 struct DizOptions
@@ -287,6 +286,7 @@ struct CommandLineOptions
 	int UsePromptFormat;
 	int UseShell;
 	int WaitKeypress;
+	int VTLogLimit;
 	FARString strPromptFormat;
 	FARString strShell;
 };
