@@ -5961,6 +5961,19 @@ upd:" Ctrl+Shift+MouseScrollUp - autoclosing console log viewer.               "
 " Ctrl+Shift+MouseScrollUp - перегляд лога, що завершується автоматично.   "
 " Ctrl+Shift+MouseScrollUp - прагляд лога, які завяршаецца аўтаматычна.    "
 
+VTStartTipMouseSelect
+l:
+"Выделенный мышью текст автоматически копируется в буфер обмена            "
+"Text selected with mouse automatically copied to clipboard                "
+upd:"Text selected with mouse automatically copied to clipboard                "
+upd:"Text selected with mouse automatically copied to clipboard                "
+upd:"Text selected with mouse automatically copied to clipboard                "
+upd:"Text selected with mouse automatically copied to clipboard                "
+upd:"Text selected with mouse automatically copied to clipboard                "
+"Виділений мишею текст автоматично копіюється у буфер обміну               "
+"Вылучаны мышшу тэкст аўтаматычна капіюецца ў буфер абмену                 "
+
+
 BookmarkBottom
 "Редактирование: Del,Ins,F4,Shift+Вверх,Shift+Вниз"
 "Edit: Del,Ins,F4,Shift+Up,Shift+Down"

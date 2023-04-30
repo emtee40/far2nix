@@ -52,6 +52,8 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "dirmix.hpp"
 #include "console.hpp"
 
+#include "farversion.h"
+
 ControlObject *CtrlObject;
 
 ControlObject::ControlObject()
@@ -187,16 +189,13 @@ void ControlObject::ShowStartupBanner(LPCWSTR EmergencyMsg)
 {
 	std::vector<FARString> Lines;
 
-	char Xor = 17;
 	std::string tmp_mb;
 	for (const char *p = Copyright; *p; ++p) {
-		const char c = (*p & 0x7f) ^ Xor;
-		Xor^= c;
-		if (c == '\n') {
+		if (*p == '\n') {
 			Lines.emplace_back(tmp_mb);
 			tmp_mb.clear();
 		} else {
-			tmp_mb+= c;
+			tmp_mb+= *p;
 		}
 	}
 	if (!tmp_mb.empty()) {
@@ -239,6 +238,7 @@ void ControlObject::ShowStartupBanner(LPCWSTR EmergencyMsg)
 			Lines.emplace_back(Msg::VTStartTipPendCmdCtrlAltZ);
 		}
 		Lines.emplace_back(Msg::VTStartTipPendCmdMouse);
+		Lines.emplace_back(Msg::VTStartTipMouseSelect);
 
 		const int FreeSpace = Size.Y - CursorPosition.Y - 1;
 		const int LineCount = 4 + Lines.size();

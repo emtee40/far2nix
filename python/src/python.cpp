@@ -21,7 +21,7 @@
 static struct PluginStartupInfo Info;
 static FARSTANDARDFUNCTIONS FSF;
 
-// #define PYPLUGIN_DEBUGLOG "/tmp/far2.py.log"
+//#define PYPLUGIN_DEBUGLOG "/tmp/far2.py.log"
 // #define PYPLUGIN_DEBUGLOG "" /* to stderr */
 // #define PYPLUGIN_THREADED
 // #define PYPLUGIN_MEASURE_STARTUP
@@ -105,6 +105,7 @@ protected:
         std::string syspath = "import sys";
         syspath += "\nsys.path.insert(1, '" + pluginPath + "')";
         syspath += "\nsys.path.insert(1, '" + pluginPath + "/plugins')";
+
         PyRun_SimpleString(syspath.c_str());
 
         PyObject *pName;
@@ -118,7 +119,7 @@ protected:
             return nullptr;
         }
 
-        pyPluginManager = PyObject_GetAttrString(pyPluginModule, "pluginmanager");
+        pyPluginManager = PyObject_GetAttrString(pyPluginModule, "_pluginmanager");
         if (pyPluginManager == NULL) {
             PYTHON_LOG("Failed to load \"far2l.pluginmanager\"\n");
             Py_DECREF(pyPluginModule);
@@ -140,8 +141,12 @@ public:
         }
 
         std::wstring progname;
+#ifdef VIRTUAL_PYTHON
+        StrMB2Wide(VIRTUAL_PYTHON, progname);
+#else
         StrMB2Wide(pluginPath, progname);
         progname += L"/python/bin/python";
+#endif
 
         PYTHON_LOG("pluginpath: %s, python library used:%s, progname: %ls\n", pluginPath.c_str(), PYTHON_LIBRARY, progname.c_str());
 
@@ -150,11 +155,9 @@ public:
             PYTHON_LOG("error %u from dlopen('%s')\n", errno, PYTHON_LIBRARY);
             return;
         }
-
-
         Py_SetProgramName((wchar_t *)progname.c_str());
         Py_Initialize();
-        //PyEval_InitThreads();
+        PyEval_InitThreads();
 
         //TranslateInstallPath_Lib2Share(pluginPath);
 

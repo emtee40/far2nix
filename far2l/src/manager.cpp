@@ -786,7 +786,7 @@ int Manager::ProcessKey(DWORD Key)
 		switch (Key) {
 			case KEY_ALT | KEY_NUMPAD0:
 			case KEY_ALTINS: {
-				RunGraber();
+				Grabber::Run();
 				return TRUE;
 			}
 			case KEY_CONSOLE_BUFFER_RESIZE:
@@ -1595,6 +1595,19 @@ Frame *Manager::GetTopModal()
 		f = fo;
 
 	return f;
+}
+
+/*
+	$ 15.05.2002 SKV
+	Так как нужно это в разных местах,
+	а глобальные счётчики не концептуально,
+	то лучше это делать тут.
+*/
+void Manager::ExecuteModalEV()
+{
+	++ModalEVCount;
+	ExecuteModal();
+	--ModalEVCount;
 }
 
 /////////
