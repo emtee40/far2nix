@@ -93,6 +93,7 @@ súgóoldalakon, #Shift-F1#-re pedig a súgó tartalma jelenik meg.
 amit az #F5# #(Nagyít)# funkcióbillentyűvel maximalizálhatunk. Az #F5# újbóli
 lenyomása az előző méretre állítja vissza a súgó ablakát.
 
+   #Ctrl-Alt-Shift#   Temporarily hide help window (as long as these keys are held down).
 
 @About
 $ # FAR: a programról#
@@ -129,7 +130,7 @@ documentation and/or other materials provided with the distribution.
  3. The name of the authors may not be used to endorse or promote products
 derived from this software without specific prior written permission.
 
- THIS SOFTWARE IS PROVIDED BY THE AUTHOR `AS IS' AND ANY EXPRESS OR
+ THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
 IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
@@ -240,8 +241,23 @@ $ #Billentyűparancsok#
 
  ~Egér: görgő támogatása~@MsWheel@
 
+ ~Menu control commands~@MenuCmd@
+
  ~Egyebek~@MiscCmd@
 
+@MenuCmd
+$ #Menu control commands#
+ #Common menu and drop-down list commands#
+
+  Filter menu or list items                               #Ctrl-Alt-F#
+   (shows only items containing the typing text)
+
+  Lock filter                                             #Ctrl+Alt+L#
+
+  Horizontally scroll long item  #Alt-Left#,#Alt-Right#,#Alt-Home#,#Alt-End#
+   (work only with non-numpad)
+
+  See also the list of ~macro keys~@KeyMacroMenuList@, available in the menus.
 
 @PanelCmd
 $ #Panelvezérlő parancsok#
@@ -401,6 +417,7 @@ kétféle rendezés eltéréseit:
     11.txt                             5.txt
     88.txt                             88.txt
 
+    See also: common ~menu~@MenuCmd@ keyboard commands.
 
 @FastFind
 $ #Gyorskeresés a paneleken#
@@ -844,6 +861,7 @@ kezeli a megadott paramétert, függetlenül a fájlpanel típusától.
     Az #Alt-Shift-F9# billentyűkombináció meghívja a
 ~plugin beállítások~@PluginsConfig@ menüt.
 
+    Common ~menu~@MenuCmd@ keyboard commands.
 
 @PluginsConfig
 $ #Plugin beállítások#
@@ -863,6 +881,7 @@ a kijelölt plugin súgójának fő témaköre jelenik meg.
 a menü elemeihez, így később ~makrókkal~@KeyMacro@ hívhatjuk
 meg őket.
 
+    See also: common ~menu~@MenuCmd@ keyboard commands.
 
 @PluginsReviews
 $ #A pluginek képességeinek áttekintése#
@@ -1159,6 +1178,8 @@ számokkal) és dátuma.
    #Meghajtóváltás#       ^<wrap>Az aktuális meghajtóról másikra válthatunk a
 Meghajtók menüben.
 
+    See also: common ~menu~@MenuCmd@ keyboard commands.
+
 @FilesMenu
 $ #Menük: Fájlok menü#
 
@@ -1208,6 +1229,7 @@ kijelölését fájlművelet vagy csoport kijelölése után.
    A menü néhány parancsáról további leírást olvashatunk a
 ~Fájlkezelő és rendszerparancsok~@FuncCmd@ témakörben.
 
+    See also: common ~menu~@MenuCmd@ keyboard commands.
 
 @CmdMenu
 $ #Menük: Parancsok menü#
@@ -1265,6 +1287,7 @@ részletezi a lehetőségeit.
 
    #Hotplug eszközök#     A ~hotplug eszközök listája~@HotPlugList@.
 
+   See also: common ~menu~@MenuCmd@ keyboard commands.
 
 @OptMenu
 $ #Menük: Beállítások menü#
@@ -1315,6 +1338,7 @@ az eredeti színkombináció.
    #Beállítások#          Elmenti a jelenlegi beállításokat, színeket
    #mentése#              és a képernyő elrendezését.
 
+   See also: common ~menu~@MenuCmd@ keyboard commands.
 
 @ConfirmDlg
 $ #Megerősítések#
@@ -1346,6 +1370,7 @@ menüből;
 
     - kilépés a FAR-ból.
 
+    See also: common ~menu~@MenuCmd@ keyboard commands.
 
 @MakeFolder
 $ #Új mappa#
@@ -1604,8 +1629,14 @@ $ #Parancs előzmények#
   A kiválasztott parancsot a vágólapra másolja,                #Ctrl-C#
     a lista legördítve marad                            vagy #Ctrl-Ins#
 
-  Toggle to quick filtering                                #Ctrl-Alt-F#
-  (shows only items containing the typing text)
+  Toggle history view:                                         #Ctrl-T#
+             * with date lines (as in far3)
+             * with date lines + time column
+             * plain history (as in far2)
+
+  Show additional information                                      #F3#
+
+  Quick jump in panel to directory of command                #Ctrl-F10#
 
     Ha az előző vagy a következő parancsot közvetlenül a
   parancssorból szeretnénk meghívni, használjuk a #Ctrl-E# vagy
@@ -1622,6 +1653,7 @@ $ #Parancs előzmények#
     A zárolt előzményelemek nem törlődnek az előzménylista módosulása
   vagy törlése esetén sem.
 
+    See also: common ~menu~@MenuCmd@ keyboard commands.
 
 @HistoryViews
 $ #Előzmények: megnézett és szerkesztett fájlok előzménye#
@@ -1649,8 +1681,12 @@ $ #Előzmények: megnézett és szerkesztett fájlok előzménye#
   Fájl megnyitása a ~nézőkében~@Viewer@                                      #F3#
                                                         vagy #Numpad 5#
 
-  Toggle to quick filtering                                #Ctrl-Alt-F#
-  (shows only items containing the typing text)
+  Toggle history view:                                         #Ctrl-T#
+             * with date lines (as in far3)
+             * with date lines + time column
+             * plain history (as in far2)
+
+  Quick jump in panel to directory and file                  #Ctrl-F10#
 
     A lista fájljainak megnyitását a kurzorvezérlőkön és az #Enteren#
   kívül elvégezhetjük közvetlenül a kiemelt betűjelükkel is.
@@ -1664,12 +1700,13 @@ $ #Előzmények: megnézett és szerkesztett fájlok előzménye#
 
   Megjegyzések:
 
-     1. A lista frissítése (Ctrl-R) hosszú időt vehet igénybe, ha
+     1. A lista frissítése (#Ctrl-R#) hosszú időt vehet igénybe, ha
         jelenleg nem elérhető távoli helyeket kell vizsgálnia.
 
      2. A zárolt előzményelemek nem törlődnek az előzménylista
         módosulása vagy törlése esetén sem.
 
+    See also: common ~menu~@MenuCmd@ keyboard commands.
 
 @HistoryFolders
 $ #Előzmények: mappa előzmények#
@@ -1694,8 +1731,12 @@ $ #Előzmények: mappa előzmények#
   A kiválasztott mappa nevét a vágólapra másolja,              #Ctrl-C#
   a lista legördítve marad                              vagy #Ctrl-Ins#
 
-  Toggle to quick filtering                                #Ctrl-Alt-F#
-  (shows only items containing the typing text)
+  Toggle history view:                                         #Ctrl-T#
+             * with date lines (as in far3)
+             * with date lines + time column
+             * plain history (as in far2)
+
+  Quick jump in panel to directory (here #Enter# analog)       #Ctrl-F10#
 
     A lista mappáinak megnyitására a kurzorvezérlőkön és az #Enteren#
   kívül használatjuk a kiemelt betűjelüket is.
@@ -1709,30 +1750,17 @@ $ #Előzmények: mappa előzmények#
 
   Megjegyzések:
 
-    1. A lista frissítése (Ctrl-R) hosszú időt vehet igénybe, ha
+    1. A lista frissítése (#Ctrl-R#) hosszú időt vehet igénybe, ha
        pillanatnyilag nem elérhető távoli helyeket kell vizsgálnia.
 
     2. A zárolt előzményelemek nem törlődnek az előzménylista
        módosulása vagy törlése esetén sem.
 
+   See also: common ~menu~@MenuCmd@ keyboard commands.
 
 @TaskList
 $ #Futó programok#
-    A Futó programok menü a jelenleg működő programokat listázza ki. A lista
-sorai megegyeznek a futó programok ablakainak megnevezéseivel.
-
-    A listán átválthatunk a futó program ablakára vagy a programokat
-"kilőhetjük" a memóriából a #Del# billentyűvel. Utóbbi művelettel bánjunk
-óvatosan, mert azonnal leállítja a kiválasztott program futását és annak
-minden elmentetlen adata elvész, ezért ezt a funkciót csak végszükség esetén
-használjuk, például a nem válaszoló programoknál.
-
-    A Futó programokat a ~Parancsok menüből~@CmdMenu@ vagy a #Ctrl-W#
-billentyűkombinációval hívhatjuk meg. A #Ctrl-W# kombináció a nézőkében és a
-szerkesztőben is működik.
-
-    A #Ctrl-R# frissíti a programok listáját.
-
+    The task list displays active tasks by using #htop# (if available).
 
 @HotPlugList
 $ #Hotplug eszközök#
@@ -1745,6 +1773,7 @@ rajta. Ezután a Windows gondoskodik az eszköz biztonságos eltávolításáró
 
     A #Ctrl-R# frissíti a csatlakozó eszközök listáját.
 
+    See also: common ~menu~@MenuCmd@ keyboard commands.
 
 @CompFolders
 $ #Mappák összehasonlítása#
@@ -1810,6 +1839,11 @@ fogja használni a registrybe mentett főmenü helyett.
 akár almenü volt megnyitva benne.
 
 
+    See also:
+ 
+    The list of ~macro keys~@KeyMacroUserMenuList@, available in the user menu.
+    Common ~menu~@MenuCmd@ keyboard commands.
+
 @FileAssoc
 $ #Fájltársítások#
     A FAR Manager támogatja a fájlok társításait, így a megadott
@@ -1835,6 +1869,7 @@ társításokat menüből választhatjuk ki.
 #fájltípusainak használata# opció be van kapcsolva, a FAR megpróbálja a
 Windows társításait alkalmazni.
 
+    See also: common ~menu~@MenuCmd@ keyboard commands.
 
 @FileAssocModify
 $ #Fájltársítások: szerkesztés#
@@ -1887,27 +1922,16 @@ $ #Különleges szimbólumok#
 ~Parancs végrehajtása~@ApplyCmd@ menüben a következő különleges szimbólumokat
 használhatjuk:
 
-    #!!#       "!" karakter
-    #!#        Hosszú fájlnév, kiterjesztés nélkül
-    #!~~#       Rövid fájlnév, kiterjesztés nélkül
-    #!`#       Hosszú kiterjesztés fájlnév nélkül (ext)
-    #!`~~#      Rövid kiterjesztés fájlnév nélkül (ext)
-    #!.!#      Hosszú fájlnév, kiterjesztéssel
-    #!-!#      Rövid fájlnév, kiterjesztéssel
-    #!+!#      ^<wrap>Hasonló a !-!-hoz, de ha a hosszú fájlnév elveszett
-a parancs végrehajtása után, a FAR visszaállítja
-    #!@@!#      A fájl neve, a kijelölt fájlnevek listájával
-    #!$!#      A fájl neve, a kijelölt rövid fájlnevek listájával
-    #!&#       A kijelölt fájlok listája
-    #!&~~#      A kijelölt rövid fájlnevek listája
-    #!:#       Az aktuális meghajtó, "C:" formátumban, távoli mappáknál
-"\\\\server\\share"
-    #!\\#       Az aktuális elérési útvonal
-    #!/#       Az aktuális elérési út rövid neve
-    #!=\\#      Az aktuális elérési út, a ~szimbolikus linkeket~@HardSymLink@
+    #!!#            "!" karakter
+    #!#             Fájlnév, kiterjesztés nélkül
+    #!`#            Kiterjesztés fájlnév nélkül (ext)
+    #!.!#           Fájlnév, kiterjesztéssel
+    #!@@!# vagy #!$!#  A fájl neve, a kijelölt fájlnevek listájával
+    #!&#            A kijelölt fájlok listája
+    #!/#  vagy #!\\#   Az aktuális elérési útvonal
+    #!=/# vagy #!=\\#  Az aktuális elérési út, a ~szimbolikus linkeket~@HardSymLink@
 is figyelembe véve.
-    #!=/#      Az aktuális elérési út rövid neve,
-a ~szimbolikus linkeket~@HardSymLink@ is figyelembe véve.
+
     #!?<név>?<alapérték>!#   A parancs végrehajtásakor e szimbólum helyén
 egy felhasználói beviteli ablak jelenik meg. A <név> a beviteli mező neve, az
 <alapérték> pedig a szerkesztőmezőbe eredetileg kerülő karaktersor.
@@ -2282,13 +2306,15 @@ nincs bekapcsolva és a sorok túlnyúlnak a kép méretén)
     #F2#                 Sortörés be/ki
     #Shift-F2#           Betűtörés/szótörés átkapcsoló
     #F4#                 Szöveg/hexa mód átkapcsoló
+     (hex mode does not support UTF-8 and other multibyte code pages
+      and switches the view to a single-byte code page)
     #F6#                 Átvált ~szerkesztésre~@Editor@
     #Alt-F5#             ^<wrap>Fájl nyomtatása (a Nyomtatóvezérlő plugin
 segítségével)
     #F7#                 ~Keresés~@ViewerSearch@
     #Shift-F7, Szóköz#   Tovább keres
     #Alt-F7#             Tovább keres, de visszafelé
-    #F8#                 OEM/ANSI kódlap váltó
+    #F8#                 UTF8/~ANSI/OEM~@CodePagesSet@ kódlap váltó
     #Shift-F8#           Kódlap kiválasztása
     #Alt-F8#             ~Ugrás~@ViewerGotoPos@ a jelenlegi
 szövegpozícióból másik pozícióba
@@ -2426,7 +2452,7 @@ szerkesztőben jelenleg is nyitva van,
 "~a szerkesztett fájl újbóli megnyitása~@EditorReload@" ablakban választhatunk
 a lehetőségek közül.
 
-    3. ^<wrap>Az új fájl létrehozásakor alapértelmezés szerint a Windows
+    3. ^<wrap>Az új fájl létrehozásakor alapértelmezés szerint a UTF-8
 kódlapját kapja, de ez az opció a ~szerkesztő beállítások~@EditorSettings@
 menüben kikapcsolható.
 
@@ -2483,6 +2509,9 @@ kurzorpozícióba (csak maradó blokk módban)
 kurzorpozícióba (csak maradó blokk módban)
    #Alt-U#                   Blokk eltolása balra
    #Alt-I#                   Blokk eltolása jobbra
+   #Shift-Tab#               Shift block left by Tab or by indent size (processed by SimpleIndent plugin)
+   #Tab#                     Shift block right by Tab or by indent size (processed by SimpleIndent plugin)
+
 
   Egyéb műveletek
 
@@ -2500,7 +2529,7 @@ kurzorpozícióba (csak maradó blokk módban)
    #Ctrl-F7#                 ~Keresés és csere~@EditorSearch@
    #Shift-F7#                Keresés és csere folytatása
    #Alt-F7#                  Keresés és csere folytatása, visszafelé
-   #F8#                      OEM/ANSI kódlap váltó
+   #F8#                      UTF8/~ANSI/OEM~@CodePagesSet@ kódlap váltó
    #Shift-F8#                Kódlap kiválasztása
    #Alt-F8#                  ~Ugrás~@EditorGotoPos@ megadott sorra és oszlopra
    #Alt-F9#                  A FAR konzolablak méretének átváltása
@@ -2663,6 +2692,13 @@ szerkesztő másik példányával) a szerkesztés közben megváltoztatta a fáj
 megnyitott példány aktuális állapota írja felül és a külső program által
 végrehajtott összes módosítás elvész.
 
+    See also: common ~menu~@MenuCmd@ keyboard commands.
+
+@CodePagesSet
+$ #ANSI and OEM codepage setting#
+  Switchable by #F8# and #Shift-F8# OEM and ANSI code pages are defined based on the file
+  #~~/.config/far2l/cp# (firts line is #OEM#, second is #ANSI#)
+  or, if its absence, by environment variable #LC_CTYPE#
 
 @DriveDlg
 $ #Meghajtóváltás (Meghajtók menü)#
@@ -2744,6 +2780,8 @@ párbeszédablakát.
     A #Shift-F1# pluginen lenyomva meghívja a plugin helyzetérzékeny
 súgóját (ha a súgófájl létezik).
 
+    See also:
+    Common ~menu~@MenuCmd@ keyboard commands.
 
 @DisconnectDrive
 $ #Hálózati meghajtó leválasztása#
@@ -2797,6 +2835,7 @@ csoportokat
     A FAR a csoportkiemeléseket felülről lefelé haladva vizsgálja. Ha érzékeli,
 hogy a fájl valamelyik csoport tagja, további hovatartozását nem vizsgálja.
 
+    See also: common ~menu~@MenuCmd@ keyboard commands.
 
 @HighlightEdit
 $ #Fájlkiemelések, rendezési csoportok: szerkesztés#
@@ -2918,15 +2957,15 @@ paneljei kikapcsolódjanak, kezdjük a parancssort #@@# karakterrel.
 
     Tabulátorból szóközök:
 
-    #Ne helyettesítse a#    A tabulátorokat nem konvertálja szóközzé
-    #tabulátorokat#         a szerkesztés során.
+    - #Ne helyettesítse a#  A tabulátorokat nem konvertálja szóközzé
+      #tabulátorokat#       a szerkesztés során.
 
-    #Újonnan beírt tabu-#   Szövegszerkesztés közben minden beírt
-    #látorokból szóközök#   ^<wrap>#Tab# karaktert megfelelő számú szóközzel
+    - #Újonnan beírt tabu-# Szövegszerkesztés közben minden beírt
+      #látorokból szóközök# ^<wrap>#Tab# karaktert megfelelő számú szóközzel
 helyettesít, de a korábbi tabulátorokat nem konvertálja.
 
-    #Minden tabulátorból#   A szöveg megnyitásakor automatikusan
-    #szóközök#              minden tabulátort szóközzé alakít.
+    - #Minden tabulátorból# A szöveg megnyitásakor automatikusan
+      #szóközök#            minden tabulátort szóközzé alakít.
 
 
   #Maradó blokkok#          ^<wrap>Nem veszi le a blokkokról a kijelölést,
@@ -2955,6 +2994,9 @@ elhelyezett könyvjelzőinket.
   #Gördítősáv mutatva#      ^<wrap>Az oldalsó gördítősáv megjelenítése a
 a belső szerkesztőben.
 
+
+  #Use .editorconfig#       Processing .editorconfig parameters
+  #settings files#          (see https://editorconfig.org for details)
 
   #Írásra megnyitott fáj-#  Lehetővé teszi a más programokban írásra
   #lok szerkeszthetők#      ^<wrap>megnyitott fájlok szerkesztését. Ez a
@@ -3080,6 +3122,7 @@ elérési útvonalát rendeli hozzá az aktuális gyorsbillentyűhöz.
     Szerkesztéssel (#F4#) pluginnel emulált panelekhez nem rendelhetünk
 gyorsbillentyűt.
 
+    See also: common ~menu~@MenuCmd@ keyboard commands.
 
 @FiltersMenu
 $ #Szűrők menü#
@@ -3143,6 +3186,7 @@ menti.
     ~Másolás, mozgatás, átnevezés és linkek létrehozása~@CopyFiles@
     ~Fájlkeresés~@FindFile@
 
+    See also: common ~menu~@MenuCmd@ keyboard commands.
 
 @FileDiz
 $ #Fájlmegjegyzések#
@@ -3239,8 +3283,7 @@ jelenik meg);
     Ha az oszloptípusok leírójában több fájlnévoszlop szerepel, a fájlpanel
 többoszlopos formában jelenik meg.
 
-    Az attribútumok betűjeleinek jelentése:
-
+    Az Windows attribútumok betűjeleinek jelentése:
        #R#         - Read only (Csak olvasható)
        #S#         - System (Rendszer)
        #H#         - Hidden (Rejtett)
@@ -3253,6 +3296,22 @@ Titkosított)
        #I#         - Nem (tartalom)indexelt
        #O#         - Offline
        #V#         - Virtuális
+
+    Unix file types:
+       #B#         - Broken
+       #d#         - Directory
+       #c#         - Character device
+       #b#         - Block device
+       #p#         - FIFO (named Pipe)
+       #s#         - Socket
+       #l#         - Symbolic Link
+       #-#         - Regular file
+    Unix file permissions (in each triad for owner, group, other users):
+       #r# or #-#    - readable or not
+       #w# or #-#    - writable or not
+       #x# or #-#    - executable or not
+       #s# or #S#    - setuid/setgid also executable (#s#) or not executable (#S#)
+       #t# or #T#    - sticky also executable (#t#) or not executable (#T#)
 
     Az attribútumok megjelenítési sorrendje: RSHALCTIOV. A "Ritkított"
 attribútum csak fájlokra vonatkozhat és az "L" helyén jelenik meg. A
@@ -3305,6 +3364,7 @@ említett betűméret beállítás csak a megjelenítésre hat, mivel a FAR ered
     #Nagy/kisbetű érzékeny rendezés# - a rendezésnél figyelembe veszi a
 fájlnevek betűméreteit.
 
+  See also: common ~menu~@MenuCmd@ keyboard commands.
 
 @SortGroups
 $ #Rendezési csoportok#
@@ -3702,6 +3762,7 @@ A #Ctrl-Tab# a következő, a #Ctrl-Shift-Tab# az előző képernyőre vált, az
     A funkciót a ~Panel beállítások~@PanelSettings@ párbeszédablak
 "Háttérképernyők száma mutatva" opciójával letilthatjuk.
 
+    See also: common ~menu~@MenuCmd@ keyboard commands.
 
 @ApplyCmd
 $ #Parancs végrehajtása#

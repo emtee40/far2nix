@@ -33,6 +33,10 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "headers.hpp"
 
+#include <algorithm>	// for std::sort()
+#include <pwd.h>		// for getpwent()
+#include <grp.h>		// for getgrent()
+
 #include "lang.hpp"
 #include "dialog.hpp"
 #include "chgprior.hpp"
@@ -62,12 +66,12 @@ enum SETATTRDLG
 	SA_TEXT_LABEL,
 	SA_TEXT_NAME,
 	SA_SEPARATOR1,
-	SA_TEXT_INFO,
+	SA_TXTBTN_INFO,
 	SA_EDIT_INFO,
 	SA_TEXT_OWNER,
-	SA_EDIT_OWNER,
+	SA_COMBO_OWNER,
 	SA_TEXT_GROUP,
-	SA_EDIT_GROUP,
+	SA_COMBO_GROUP,
 
 	SA_SEPARATOR2,
 	SA_CHECKBOX_IMMUTABLE,
@@ -151,19 +155,22 @@ enum DIALOGMODE
 
 struct SetAttrDlgParam
 {
-	bool Plugin;
-	DWORD FileSystemFlags;
+	bool Plugin = false;
+	DWORD FileSystemFlags = 0;
 	DIALOGMODE DialogMode;
 	FARString strSelName;
 	FARString strOwner;
 	FARString strGroup;
-	bool OwnerChanged, GroupChanged;
+	bool OwnerChanged = false, GroupChanged = false;
 	// значения CheckBox`ов на момент старта диалога
 	int OriginalCBAttr[ARRAYSIZE(PreserveOriginalIDs)];
 	int OriginalCBAttr2[ARRAYSIZE(PreserveOriginalIDs)];
 	DWORD OriginalCBFlag[ARRAYSIZE(PreserveOriginalIDs)];
 	FARCHECKEDSTATE OSubfoldersState;
 	bool OAccessTime, OModifyTime, OStatusChangeTime;
+	unsigned char SymLinkInfoCycle = 0;
+	FARString SymLink;
+	FARString SymlinkButtonTitles[3];
 };
 
 #define DM_SETATTR (DM_USER + 1)
@@ -189,6 +196,33 @@ static void BlankEditIfChanged(HANDLE hDlg, int EditControl, FARString &Remember
 		SendDlgMessage(hDlg, DM_SETTEXTPTR, EditControl, reinterpret_cast<LONG_PTR>(L""));
 }
 
+static std::wstring BriefInfo(const FARString &strSelName)
+{
+	std::vector<std::wstring> lines;
+
+	std::string cmd = "file -- \"";
+	cmd+= EscapeCmdStr(Wide2MB(strSelName.CPtr()));
+	cmd+= '\"';
+
+	std::wstring out;
+
+	if (POpen(lines, cmd.c_str())) {
+		for (const auto &line : lines) {
+			out = line;
+			size_t p = out.find(':');
+			if (p != std::string::npos) {
+				out.erase(0, p + 1);
+			}
+			StrTrim(out);
+			if (p != std::string::npos && !out.empty()) {
+				break;
+			}
+		}
+	}
+	return out;
+}
+
+
 LONG_PTR WINAPI SetAttrDlgProc(HANDLE hDlg, int Msg, int Param1, LONG_PTR Param2)
 {
 	SetAttrDlgParam *DlgParam =
@@ -196,7 +230,14 @@ LONG_PTR WINAPI SetAttrDlgProc(HANDLE hDlg, int Msg, int Param1, LONG_PTR Param2
 	int OrigIdx;
 
 	switch (Msg) {
-		case DN_BTNCLICK:
+			case DN_CLOSE:
+			if (DlgParam->SymLinkInfoCycle == 0) {
+				DlgParam->SymLink = reinterpret_cast<LPCWSTR>
+					(SendDlgMessage(hDlg, DM_GETCONSTTEXTPTR, SA_EDIT_INFO, 0));
+			}
+			break;
+
+			case DN_BTNCLICK:
 			OrigIdx = DialogID2PreservedOriginalIndex(Param1);
 			if (OrigIdx != -1 || Param1 == SA_CHECKBOX_SUBFOLDERS) {
 				if (OrigIdx != -1) {
@@ -226,9 +267,9 @@ LONG_PTR WINAPI SetAttrDlgProc(HANDLE hDlg, int Msg, int Param1, LONG_PTR Param2
 										}
 									}
 
-									BlankEditIfChanged(hDlg, SA_EDIT_OWNER, DlgParam->strOwner,
+									BlankEditIfChanged(hDlg, SA_COMBO_OWNER, DlgParam->strOwner,
 											DlgParam->OwnerChanged);
-									BlankEditIfChanged(hDlg, SA_EDIT_GROUP, DlgParam->strGroup,
+									BlankEditIfChanged(hDlg, SA_COMBO_GROUP, DlgParam->strGroup,
 											DlgParam->GroupChanged);
 								}
 								// сняли?
@@ -238,9 +279,9 @@ LONG_PTR WINAPI SetAttrDlgProc(HANDLE hDlg, int Msg, int Param1, LONG_PTR Param2
 										SendDlgMessage(hDlg, DM_SETCHECK, PreserveOriginalIDs[i],
 												DlgParam->OriginalCBAttr[i]);
 									}
-									SendDlgMessage(hDlg, DM_SETTEXTPTR, SA_EDIT_OWNER,
+									SendDlgMessage(hDlg, DM_SETTEXTPTR, SA_COMBO_OWNER,
 											reinterpret_cast<LONG_PTR>(DlgParam->strOwner.CPtr()));
-									SendDlgMessage(hDlg, DM_SETTEXTPTR, SA_EDIT_GROUP,
+									SendDlgMessage(hDlg, DM_SETTEXTPTR, SA_COMBO_GROUP,
 											reinterpret_cast<LONG_PTR>(DlgParam->strGroup.CPtr()));
 								}
 
@@ -282,9 +323,9 @@ LONG_PTR WINAPI SetAttrDlgProc(HANDLE hDlg, int Msg, int Param1, LONG_PTR Param2
 													BSTATE_3STATE);
 										}
 									}
-									SendDlgMessage(hDlg, DM_SETTEXTPTR, SA_EDIT_OWNER,
+									SendDlgMessage(hDlg, DM_SETTEXTPTR, SA_COMBO_OWNER,
 											reinterpret_cast<LONG_PTR>(L""));
-									SendDlgMessage(hDlg, DM_SETTEXTPTR, SA_EDIT_GROUP,
+									SendDlgMessage(hDlg, DM_SETTEXTPTR, SA_COMBO_GROUP,
 											reinterpret_cast<LONG_PTR>(L""));
 								}
 								// сняли?
@@ -295,9 +336,9 @@ LONG_PTR WINAPI SetAttrDlgProc(HANDLE hDlg, int Msg, int Param1, LONG_PTR Param2
 										SendDlgMessage(hDlg, DM_SETCHECK, PreserveOriginalIDs[i],
 												DlgParam->OriginalCBAttr[i]);
 									}
-									SendDlgMessage(hDlg, DM_SETTEXTPTR, SA_EDIT_OWNER,
+									SendDlgMessage(hDlg, DM_SETTEXTPTR, SA_COMBO_OWNER,
 											reinterpret_cast<LONG_PTR>(DlgParam->strOwner.CPtr()));
-									SendDlgMessage(hDlg, DM_SETTEXTPTR, SA_EDIT_GROUP,
+									SendDlgMessage(hDlg, DM_SETTEXTPTR, SA_COMBO_GROUP,
 											reinterpret_cast<LONG_PTR>(DlgParam->strGroup.CPtr()));
 								}
 							}
@@ -309,8 +350,35 @@ LONG_PTR WINAPI SetAttrDlgProc(HANDLE hDlg, int Msg, int Param1, LONG_PTR Param2
 
 				return TRUE;
 			}
+			else if (Param1 == SA_TXTBTN_INFO) {
+				FARString strText;
+				SendDlgMessage(hDlg, DM_SETTEXTPTR, SA_TXTBTN_INFO,
+					reinterpret_cast<LONG_PTR>(DlgParam->SymlinkButtonTitles[DlgParam->SymLinkInfoCycle].CPtr()));
+
+				switch (DlgParam->SymLinkInfoCycle++) {
+					case 0: {
+							DlgParam->SymLink = reinterpret_cast<LPCWSTR>
+								(SendDlgMessage(hDlg, DM_GETCONSTTEXTPTR, SA_EDIT_INFO, 0));
+							ConvertNameToReal(DlgParam->SymLink, strText);
+							SendDlgMessage(hDlg, DM_SETREADONLY, SA_EDIT_INFO, 1);
+						} break;
+
+					case 1:
+						ConvertNameToReal(DlgParam->SymLink, strText);
+						strText = BriefInfo(strText);
+						SendDlgMessage(hDlg, DM_SETREADONLY, SA_EDIT_INFO, 1);
+						break;
+
+					default:
+						strText = DlgParam->SymLink;
+						SendDlgMessage(hDlg, DM_SETREADONLY, SA_EDIT_INFO, 0);
+						DlgParam->SymLinkInfoCycle = 0;
+				}
+				SendDlgMessage(hDlg, DM_SETTEXTPTR, SA_EDIT_INFO, reinterpret_cast<LONG_PTR>(strText.CPtr()));
+				return TRUE;
+
 			// Set Original? / Set All? / Clear All?
-			else if (Param1 == SA_BUTTON_ORIGINAL) {
+			} else if (Param1 == SA_BUTTON_ORIGINAL) {
 				FAR_FIND_DATA_EX FindData;
 
 				if (apiGetFindDataEx(DlgParam->strSelName, FindData)) {
@@ -540,57 +608,31 @@ void PR_ShellSetFileAttributesMsg()
 	ShellSetFileAttributesMsg(reinterpret_cast<const wchar_t *>(preRedrawItem.Param.Param1));
 }
 
-static std::wstring BriefInfo(const FARString &strSelName)
-{
-	std::vector<std::wstring> lines;
-
-	std::string cmd = "file \"";
-	cmd+= EscapeCmdStr(Wide2MB(strSelName.CPtr()));
-	cmd+= '\"';
-
-	std::wstring out;
-
-	if (POpen(lines, cmd.c_str())) {
-		for (const auto &line : lines) {
-			out = line;
-			size_t p = out.find(':');
-			if (p != std::string::npos) {
-				out.erase(0, p + 1);
-			}
-			StrTrim(out);
-			if (p != std::string::npos && !out.empty()) {
-				break;
-			}
-		}
-	}
-	return out;
-}
-
-static bool CheckFileOwnerGroup(DialogItemEx &EditItem,
-		bool(WINAPI *GetFN)(const wchar_t *, const wchar_t *, FARString &), FARString strComputerName,
+static void CheckFileOwnerGroup(DialogItemEx &ComboItem,
+		bool(WINAPI *GetFN)(const wchar_t *, const wchar_t *, FARString &),
+		FARString strComputerName,
 		FARString strSelName)
 {
 	FARString strCur;
-	bool out = true;
 	GetFN(strComputerName, strSelName, strCur);
-	if (EditItem.strData.IsEmpty()) {
-		EditItem.strData = strCur;
-	} else if (!EditItem.strData.Equal(0, strCur)) {
-		EditItem.strData = Msg::SetAttrOwnerMultiple;
-		out = false;
+	if (ComboItem.strData.IsEmpty()) {
+		ComboItem.strData = strCur;
 	}
-	return out;
+	else if (ComboItem.strData != strCur) {
+		ComboItem.strData = Msg::SetAttrOwnerMultiple;
+	}
 }
 
-static bool
-ApplyFileOwnerGroupIfChanged(DialogItemEx &EditItem, int (*ESetFN)(LPCWSTR Name, LPCWSTR Owner, int SkipMode),
+static bool ApplyFileOwnerGroupIfChanged(DialogItemEx &ComboItem,
+		int (*ESetFN)(LPCWSTR Name, LPCWSTR Owner, int SkipMode),
 		int &SkipMode, const FARString &strSelName, const FARString &strInit, bool force = false)
 {
-	if (!EditItem.strData.IsEmpty() && (force || StrCmp(strInit, EditItem.strData))) {
-		int Result = ESetFN(strSelName, EditItem.strData, SkipMode);
+	if (!ComboItem.strData.IsEmpty() && (force || StrCmp(strInit, ComboItem.strData))) {
+		int Result = ESetFN(strSelName, ComboItem.strData, SkipMode);
 		if (Result == SETATTR_RET_SKIPALL) {
 			SkipMode = SETATTR_RET_SKIP;
-		} else if (Result == SETATTR_RET_ERROR) {
+		}
+		else if (Result == SETATTR_RET_ERROR) {
 			return false;
 		}
 	}
@@ -617,6 +659,58 @@ static void ApplyFSFileFlags(DialogItemEx *AttrDlg, const FARString &strSelName)
 	FFFlags.Apply(strSelName.GetMB());
 }
 
+class ListPwGrEnt {
+	std::vector<FarListItem> Items;
+	FarList List;
+	void Append(const wchar_t *s) {
+		Items.emplace_back();
+		Items.back().Flags = 0;
+		Items.back().Text = wcsdup(s);
+	}
+public:
+	ListPwGrEnt(bool bGroups, int SelCount);
+	~ListPwGrEnt() {
+		for (auto& item : Items)
+			free((void*)item.Text);
+	}
+	FarList *GetFarList() {
+		return &List;
+	}
+	static bool Cmp(const FarListItem& a, const FarListItem& b) {
+		return 0 > StrCmp(a.Text, b.Text);
+	}
+};
+
+ListPwGrEnt::ListPwGrEnt(bool bGroups, int SelCount)
+{
+	Items.reserve(128);
+	if (SelCount >= 2)
+		Append(Msg::SetAttrOwnerMultiple);
+
+	if (!bGroups) { // usernames
+		struct passwd *pw;
+		setpwent();
+		while ((pw = getpwent()) != NULL) {
+			Append(FARString(pw->pw_name).CPtr());
+		}
+		endpwent();
+	}
+	else { // groups
+		struct group *gr;
+		setgrent();
+		while ((gr = getgrent()) != NULL) {
+			Append(FARString(gr->gr_name).CPtr());
+		}
+		endgrent();
+	}
+
+	if( Items.size() > 1 )
+		std::sort(Items.begin()+(SelCount<2 ? 0:1), Items.end(), Cmp);
+
+	List.ItemsNumber = Items.size();
+	List.Items = Items.data();
+}
+
 bool ShellSetFileAttributes(Panel *SrcPanel, LPCWSTR Object)
 {
 	std::vector<FARString> SelectedNames;
@@ -626,17 +720,25 @@ bool ShellSetFileAttributes(Panel *SrcPanel, LPCWSTR Object)
 	ChangePriority ChPriority(ChangePriority::NORMAL);
 	short DlgX = 70, DlgY = 25;
 
+	int SelCount = SrcPanel ? SrcPanel->GetSelCount() : 1;
+
+	if (!SelCount) {
+		return false;
+	}
+
 	DialogDataEx AttrDlgData[] = {
 		{DI_DOUBLEBOX, 3,                   1,               short(DlgX - 4),  short(DlgY - 2), {}, 0, Msg::SetAttrTitle},
 		{DI_TEXT,      -1,                  2,               0,                2,               {}, 0, Msg::SetAttrFor},
 		{DI_TEXT,      -1,                  3,               0,                3,               {}, DIF_SHOWAMPERSAND, L""},
 		{DI_TEXT,      3,                   4,               0,                4,               {}, DIF_SEPARATOR, L""},
-		{DI_TEXT,      5,                   5,               17,               5,               {}, DIF_HIDDEN, Msg::SetAttrBriefInfo},
-		{DI_EDIT,      18,                  5,               short(DlgX - 6),  5,               {}, DIF_SELECTONENTRY | DIF_FOCUS | DIF_READONLY | DIF_HIDDEN, L""},
+		{DI_TEXT,      5,                   5,               17,               5,               {}, DIF_FOCUS, Msg::SetAttrBriefInfo}, // if symlink in will Button & need first focus here
+		{DI_EDIT,      18,                  5,               short(DlgX - 6),  5,               {}, DIF_SELECTONENTRY | DIF_FOCUS | DIF_READONLY, L""}, // not readonly only if symlink
 		{DI_TEXT,      5,                   6,               17,               6,               {}, 0, Msg::SetAttrOwner},
-		{DI_EDIT,      18,                  6,               short(DlgX - 6),  6,               {}, 0, L""},
+		//{DI_EDIT,      18,                  6,               short(DlgX - 6),  6,               {}, 0, L""},
+		{DI_COMBOBOX,  18,                  6,               short(DlgX-6),    6,               {}, DIF_DROPDOWNLIST|DIF_LISTNOAMPERSAND|DIF_LISTWRAPMODE,L""},
 		{DI_TEXT,      5,                   7,               17,               7,               {}, 0, Msg::SetAttrGroup},
-		{DI_EDIT,      18,                  7,               short(DlgX - 6),  7,               {}, 0, L""},
+		//{DI_EDIT,      18,                  7,               short(DlgX - 6),  7,               {}, 0, L""},
+		{DI_COMBOBOX,  18,                  7,               short(DlgX-6),    7,               {}, DIF_DROPDOWNLIST|DIF_LISTNOAMPERSAND|DIF_LISTWRAPMODE,L""},
 
 		{DI_TEXT,      3,                   8,               0,                8,               {}, DIF_SEPARATOR, L""},
 		{DI_CHECKBOX,  5,                   9,               0,                9,               {}, DIF_FOCUS | DIF_3STATE, Msg::SetAttrImmutable},
@@ -684,11 +786,11 @@ bool ShellSetFileAttributes(Panel *SrcPanel, LPCWSTR Object)
 	};
 	MakeDialogItemsEx(AttrDlgData, AttrDlg);
 	SetAttrDlgParam DlgParam{};
-	int SelCount = SrcPanel ? SrcPanel->GetSelCount() : 1;
 
-	if (!SelCount) {
-		return false;
-	}
+	ListPwGrEnt Owners(false, SelCount);
+	ListPwGrEnt Groups(true, SelCount);
+	AttrDlg[SA_COMBO_OWNER].ListItems = Owners.GetFarList();
+	AttrDlg[SA_COMBO_GROUP].ListItems = Groups.GetFarList();
 
 	if (SrcPanel && SrcPanel->GetMode() == PLUGIN_PANEL) {
 		OpenPluginInfo Info;
@@ -729,7 +831,7 @@ bool ShellSetFileAttributes(Panel *SrcPanel, LPCWSTR Object)
 			FileMode = FindData.dwUnixMode;
 		}
 
-		fprintf(stderr, "FileMode=%u\n", FileMode);
+//		fprintf(stderr, "FileMode=%u\n", FileMode);
 
 		if (SelCount == 1 && TestParentFolderName(strSelName))
 			return false;
@@ -764,23 +866,37 @@ bool ShellSetFileAttributes(Panel *SrcPanel, LPCWSTR Object)
 
 		AttrDlg[SA_FIXEDIT_LAST_ACCESS_TIME].strMask = AttrDlg[SA_FIXEDIT_LAST_MODIFICATION_TIME].strMask =
 				AttrDlg[SA_FIXEDIT_LAST_CHANGE_TIME].strMask = strTMask;
-		bool FolderPresent = false, LinkPresent = false;
+		bool FolderPresent = false;//, LinkPresent = false;
+		int  FolderCount = 0, Link2FileCount = 0, Link2DirCount = 0;
 		FARString strLinkName;
 
 		if (SelCount == 1) {
 			FSFileFlags FFFlags(strSelName.GetMB());
 
-			AttrDlg[SA_TEXT_INFO].Flags&= ~DIF_HIDDEN;
-			AttrDlg[SA_EDIT_INFO].Flags&= ~DIF_HIDDEN;
-
 			if (FileAttr & FILE_ATTRIBUTE_REPARSE_POINT) {
-				AttrDlg[SA_TEXT_INFO].strData = Msg::SetAttrLinkDest;
-				FARString strLinkDest;
-				ConvertNameToReal(strSelName, strLinkDest);
-				AttrDlg[SA_EDIT_INFO].strData = strLinkDest;
-			} else {
+				DlgParam.SymlinkButtonTitles[0] = Msg::SetAttrSymlinkObject;
+				DlgParam.SymlinkButtonTitles[1] = Msg::SetAttrSymlinkObjectInfo;
+				DlgParam.SymlinkButtonTitles[2] = Msg::SetAttrSymlinkContent;
+
+				AttrDlg[SA_TXTBTN_INFO].Type = DI_BUTTON;
+				AttrDlg[SA_TXTBTN_INFO].strData = DlgParam.SymlinkButtonTitles[2];
+				ReadSymlink(strSelName, DlgParam.SymLink);
+				AttrDlg[SA_EDIT_INFO].strData = DlgParam.SymLink;
+				AttrDlg[SA_EDIT_INFO].Flags &= ~DIF_READONLY; // not readonly only if symlink
+
+			}
+			else if (FileAttr & FILE_ATTRIBUTE_DEVICE_CHAR)
+				AttrDlg[SA_EDIT_INFO].strData = Msg::FileFilterAttrDevChar;
+			else if (FileAttr & FILE_ATTRIBUTE_DEVICE_BLOCK)
+				AttrDlg[SA_EDIT_INFO].strData = Msg::FileFilterAttrDevBlock;
+			else if (FileAttr & FILE_ATTRIBUTE_DEVICE_FIFO)
+				AttrDlg[SA_EDIT_INFO].strData = Msg::FileFilterAttrDevFIFO;
+			else if (FileAttr & FILE_ATTRIBUTE_DEVICE_SOCK)
+				AttrDlg[SA_EDIT_INFO].strData = Msg::FileFilterAttrDevSock;
+			else {
 				AttrDlg[SA_EDIT_INFO].strData = BriefInfo(strSelName);
 			}
+
 
 			if (FileAttr & FILE_ATTRIBUTE_DIRECTORY) {
 				if (!DlgParam.Plugin) {
@@ -857,8 +973,8 @@ bool ShellSetFileAttributes(Panel *SrcPanel, LPCWSTR Object)
 				SrcPanel->GetCurDir(strCurDir);
 			}
 
-			GetFileOwner(strComputerName, strSelName, AttrDlg[SA_EDIT_OWNER].strData);
-			GetFileGroup(strComputerName, strSelName, AttrDlg[SA_EDIT_GROUP].strData);
+			GetFileOwner(strComputerName, strSelName, AttrDlg[SA_COMBO_OWNER].strData);
+			GetFileGroup(strComputerName, strSelName, AttrDlg[SA_COMBO_GROUP].strData);
 		}		// end of if (SelCount==1)
 		else {
 			for (size_t i = 0; i < ARRAYSIZE(AP); i++) {
@@ -880,41 +996,46 @@ bool ShellSetFileAttributes(Panel *SrcPanel, LPCWSTR Object)
 
 			// проверка - есть ли среди выделенных - каталоги?
 			// так же проверка на атрибуты
+			// так же подсчет числа каталогов и symlinks
 			if (SrcPanel) {
 				SrcPanel->GetSelName(nullptr, FileAttr, FileMode);
 			}
 			FolderPresent = false;
+			FolderCount = 0; Link2FileCount = 0; Link2DirCount = 0;
 
 			if (SrcPanel) {
 				FARString strComputerName;
 				FARString strCurDir;
 				SrcPanel->GetCurDir(strCurDir);
 
-				bool CheckOwner = true, CheckGroup = true;
 				while (SrcPanel->GetSelName(&strSelName, FileAttr, FileMode, &FindData)) {
-					if (!FolderPresent && (FileAttr & FILE_ATTRIBUTE_DIRECTORY)) {
-						FolderPresent = true;
-						AttrDlg[SA_SEPARATOR4].Flags&= ~DIF_HIDDEN;
-						AttrDlg[SA_CHECKBOX_SUBFOLDERS].Flags&= ~(DIF_DISABLE | DIF_HIDDEN);
-						AttrDlg[SA_DOUBLEBOX].Y2+= 2;
-						for (int i = SA_SEPARATOR5; i <= SA_BUTTON_CANCEL; i++) {
-							AttrDlg[i].Y1+= 2;
-							AttrDlg[i].Y2+= 2;
+					if (FileAttr & FILE_ATTRIBUTE_DIRECTORY) {
+						if (FileAttr & FILE_ATTRIBUTE_REPARSE_POINT)
+							Link2DirCount++;
+						else
+							FolderCount++;
+						if (!FolderPresent) {
+							FolderPresent = true;
+							AttrDlg[SA_SEPARATOR4].Flags&= ~DIF_HIDDEN;
+							AttrDlg[SA_CHECKBOX_SUBFOLDERS].Flags&= ~(DIF_DISABLE | DIF_HIDDEN);
+							AttrDlg[SA_DOUBLEBOX].Y2+= 2;
+							for (int i = SA_SEPARATOR5; i <= SA_BUTTON_CANCEL; i++) {
+								AttrDlg[i].Y1+= 2;
+								AttrDlg[i].Y2+= 2;
+							}
+							DlgY+= 2;
 						}
-						DlgY+= 2;
 					}
+					else if (FileAttr & FILE_ATTRIBUTE_REPARSE_POINT)
+						Link2FileCount++;
 
 					for (size_t i = 0; i < ARRAYSIZE(AP); i++) {
 						if (FileMode & AP[i].Mode) {
 							AttrDlg[AP[i].Item].Selected++;
 						}
 					}
-					if (CheckOwner)
-						CheckFileOwnerGroup(AttrDlg[SA_EDIT_OWNER], GetFileOwner, strComputerName,
-								strSelName);
-					if (CheckGroup)
-						CheckFileOwnerGroup(AttrDlg[SA_EDIT_GROUP], GetFileGroup, strComputerName,
-								strSelName);
+					CheckFileOwnerGroup(AttrDlg[SA_COMBO_OWNER], GetFileOwner, strComputerName, strSelName);
+					CheckFileOwnerGroup(AttrDlg[SA_COMBO_GROUP], GetFileGroup, strComputerName, strSelName);
 					FSFileFlags FFFlags(strSelName.GetMB());
 					if (FFFlags.Immutable())
 						AttrDlg[SA_CHECKBOX_IMMUTABLE].Selected++;
@@ -961,6 +1082,23 @@ bool ShellSetFileAttributes(Panel *SrcPanel, LPCWSTR Object)
 						? BST_CHECKED
 						: (!AttrDlg[i].Selected ? BSTATE_UNCHECKED : BSTATE_3STATE);
 			}
+
+			{
+				FARString strTmp, strSep=L" (";
+				int FilesCount = SelCount-FolderCount-Link2FileCount-Link2DirCount;
+				strTmp.Format(Msg::SetAttrInfoSelAll, SelCount);
+				if (FolderCount>0)
+				{ strTmp.AppendFormat(Msg::SetAttrInfoSelDirs, strSep.CPtr(), FolderCount); strSep=L", "; }
+				if (FilesCount>0)
+				{ strTmp.AppendFormat(Msg::SetAttrInfoSelFiles, strSep.CPtr(), FilesCount); strSep=L", "; }
+				if (Link2DirCount>0)
+				{ strTmp.AppendFormat(Msg::SetAttrInfoSelSymDirs, strSep.CPtr(), Link2DirCount); strSep=L", "; }
+				if (Link2FileCount>0)
+					strTmp.AppendFormat(Msg::SetAttrInfoSelSymFiles, strSep.CPtr(), Link2FileCount);
+				strTmp.Append(L')');
+				AttrDlg[SA_EDIT_INFO].strData = strTmp;
+			}
+
 		}
 
 		// поведение для каталогов как у 1.65?
@@ -986,8 +1124,8 @@ bool ShellSetFileAttributes(Panel *SrcPanel, LPCWSTR Object)
 			DlgParam.OriginalCBFlag[i] = AttrDlg[i].Flags;
 		}
 
-		DlgParam.strOwner = AttrDlg[SA_EDIT_OWNER].strData;
-		DlgParam.strGroup = AttrDlg[SA_EDIT_GROUP].strData;
+		DlgParam.strOwner = AttrDlg[SA_COMBO_OWNER].strData;
+		DlgParam.strGroup = AttrDlg[SA_COMBO_GROUP].strData;
 		FARString strInitOwner = DlgParam.strOwner, strInitGroup = DlgParam.strGroup;
 
 		DlgParam.DialogMode = ((SelCount == 1 && !(FileAttr & FILE_ATTRIBUTE_DIRECTORY))
@@ -1000,9 +1138,9 @@ bool ShellSetFileAttributes(Panel *SrcPanel, LPCWSTR Object)
 		Dlg.SetHelp(L"FileAttrDlg");	//  ^ - это одиночный диалог!
 		Dlg.SetId(FileAttrDlgId);
 
-		if (LinkPresent) {
+		/*if (LinkPresent) {
 			DlgY++;
-		}
+		}*/
 
 		Dlg.SetPosition(-1, -1, DlgX, DlgY);
 		Dlg.Process();
@@ -1020,8 +1158,34 @@ bool ShellSetFileAttributes(Panel *SrcPanel, LPCWSTR Object)
 
 				TPreRedrawFuncGuard preRedrawFuncGuard(PR_ShellSetFileAttributesMsg);
 				ShellSetFileAttributesMsg(SelCount == 1 ? strSelName.CPtr() : nullptr);
-				int SkipMode = -1;
+				int SkipMode = SETATTR_RET_UNKNOWN;
 
+				if (SelCount == 1 && (FileAttr & FILE_ATTRIBUTE_REPARSE_POINT) != 0) {
+					FARString OldSymLink;
+					ReadSymlink(strSelName, OldSymLink);
+					if (DlgParam.SymLink != OldSymLink) {
+						int r = 1;
+						if ( !apiPathExists(DlgParam.SymLink) ) {
+							FARString strTmp1, strTmp2, strTmp3;
+							strTmp1.Format(Msg::SetAttrSymlinkWarn1, strSelName.CPtr());
+							strTmp2.Format(Msg::SetAttrSymlinkWarn2, DlgParam.SymLink.CPtr());
+							strTmp3.Format(Msg::SetAttrSymlinkWarn3, OldSymLink.CPtr());
+							r = Message(MSG_WARNING, 2,
+								Msg::Error, strTmp1, strTmp2, strTmp3, L" ", Msg::SetAttrSymlinkWarn4,
+								Msg::HSkip, Msg::HChange);
+						}
+						if( r == 1 ) {
+							fprintf(stderr, "Symlink change: '%ls' -> '%ls'\n",
+								OldSymLink.CPtr(), DlgParam.SymLink.CPtr());
+							sdc_unlink(strSelName.GetMB().c_str());
+							r = sdc_symlink(DlgParam.SymLink.GetMB().c_str(), strSelName.GetMB().c_str());
+							if (r != 0) {
+								Message(MSG_WARNING | MSG_ERRORTYPE, 1,
+									Msg::Error, Msg::SetAttrSymlinkFailed, strSelName, Msg::Ok);
+							}
+						}
+					}
+				}
 				if (SelCount == 1 && !(FileAttr & FILE_ATTRIBUTE_DIRECTORY)) {
 					DWORD NewMode = 0;
 
@@ -1031,10 +1195,10 @@ bool ShellSetFileAttributes(Panel *SrcPanel, LPCWSTR Object)
 						}
 					}
 
-					if (!ApplyFileOwnerGroupIfChanged(AttrDlg[SA_EDIT_OWNER], ESetFileOwner, SkipMode,
+					if (!ApplyFileOwnerGroupIfChanged(AttrDlg[SA_COMBO_OWNER], ESetFileOwner, SkipMode,
 								strSelName, strInitOwner))
 						break;
-					if (!ApplyFileOwnerGroupIfChanged(AttrDlg[SA_EDIT_GROUP], ESetFileGroup, SkipMode,
+					if (!ApplyFileOwnerGroupIfChanged(AttrDlg[SA_COMBO_GROUP], ESetFileGroup, SkipMode,
 								strSelName, strInitGroup))
 						break;
 
@@ -1112,10 +1276,10 @@ bool ShellSetFileAttributes(Panel *SrcPanel, LPCWSTR Object)
 								break;
 						}
 
-						if (!ApplyFileOwnerGroupIfChanged(AttrDlg[SA_EDIT_OWNER], ESetFileOwner, SkipMode,
+						if (!ApplyFileOwnerGroupIfChanged(AttrDlg[SA_COMBO_OWNER], ESetFileOwner, SkipMode,
 									strSelName, strInitOwner))
 							break;
-						if (!ApplyFileOwnerGroupIfChanged(AttrDlg[SA_EDIT_GROUP], ESetFileGroup, SkipMode,
+						if (!ApplyFileOwnerGroupIfChanged(AttrDlg[SA_COMBO_GROUP], ESetFileGroup, SkipMode,
 									strSelName, strInitGroup))
 							break;
 
@@ -1177,11 +1341,11 @@ bool ShellSetFileAttributes(Panel *SrcPanel, LPCWSTR Object)
 										}
 									}
 
-									if (!ApplyFileOwnerGroupIfChanged(AttrDlg[SA_EDIT_OWNER], ESetFileOwner,
+									if (!ApplyFileOwnerGroupIfChanged(AttrDlg[SA_COMBO_GROUP], ESetFileOwner,
 												SkipMode, strFullName, strInitOwner,
 												DlgParam.OSubfoldersState))
 										break;
-									if (!ApplyFileOwnerGroupIfChanged(AttrDlg[SA_EDIT_GROUP], ESetFileGroup,
+									if (!ApplyFileOwnerGroupIfChanged(AttrDlg[SA_COMBO_GROUP], ESetFileGroup,
 												SkipMode, strFullName, strInitGroup,
 												DlgParam.OSubfoldersState))
 										break;

@@ -15,6 +15,7 @@
 
 #include <ScopeHelpers.h>
 #include <TTYRawMode.h>
+#include <TestPath.h>
 
 #include "TTY/TTYRevive.h"
 #include "TTY/TTYNegotiateFar2l.h"
@@ -26,6 +27,7 @@
 #include "ConsoleOutput.h"
 #include "ConsoleInput.h"
 #include "WinPortHandle.h"
+#include "ExtClipboardBackend.h"
 #include "PathHelpers.h"
 #include "../sudo/sudo_askpass_ipc.h"
 #include "SudoAskpassImpl.h"
@@ -37,7 +39,10 @@ IConsoleOutput *g_winport_con_out = nullptr;
 IConsoleInput *g_winport_con_in = nullptr;
 const wchar_t *g_winport_backend = L"";
 
-bool WinPortMainTTY(const char *full_exe_path, int std_in, int std_out, const char *nodetect, bool far2l_tty, unsigned int esc_expiration, int notify_pipe, int argc, char **argv, int(*AppMain)(int argc, char **argv), int *result);
+bool WinPortMainTTY(const char *full_exe_path, int std_in, int std_out,
+	bool ext_clipboard, bool norgb, const char *nodetect, bool far2l_tty,
+	unsigned int esc_expiration, int notify_pipe, int argc, char **argv,
+	int(*AppMain)(int argc, char **argv), int *result);
 
 extern "C" void WinPortInitRegistry();
 
@@ -225,19 +230,22 @@ extern "C" void WinPortHelp()
 	printf("\t--tty - force using TTY backend only (disable GUI/TTY autodetection)\n");
 	printf("\t--notty - don't fallback to TTY backend if GUI backend failed\n");
 	printf("\t--nodetect or --nodetect=[f|][x|xi] - don't detect if TTY backend supports FAR2L or X11/Xi extensions\n");
+	printf("\t--norgb - don't use true (24-bit) colors\n");
 	printf("\t--mortal - terminate instead of going to background on getting SIGHUP (default if in Linux TTY)\n");
 	printf("\t--immortal - go to background instead of terminating on getting SIGHUP (default if not in Linux TTY)\n");
 	printf("\t--ee or --ee=N - ESC expiration in msec (100 if unspecified) to avoid need for double ESC presses (valid only in TTY mode without FAR2L extensions)\n");
 	printf("\t--primary-selection - use PRIMARY selection instead of CLIPBOARD X11 selection (only for GUI backend)\n");
 	printf("\t--maximize - force maximize window upon launch (only for GUI backend)\n");
 	printf("\t--nomaximize - dont maximize window upon launch even if its has saved maximized state (only for GUI backend)\n");
+	printf("\t--clipboard=SCRIPT - use external clipboard handler script that implements get/set text clipboard data via its stdin/stdout\n");
 }
 
 struct ArgOptions
 {
 	const char *nodetect = "";
-	bool tty = false, far2l_tty = false, notty = false;
+	bool tty = false, far2l_tty = false, notty = false, norgb = false;
 	bool mortal = false;
+	std::string ext_clipboard;
 	unsigned int esc_expiration = 0;
 	std::vector<char *> filtered_argv;
 
@@ -257,11 +265,17 @@ struct ArgOptions
 		} else if (strcmp(a, "--tty") == 0) {
 			tty = true;
 
+		} else if (strcmp(a, "--norgb") == 0) {
+			norgb = true;
+
 		} else if (strcmp(a, "--nodetect") == 0) {
 			nodetect = "fx";
 
 		} else if (strstr(a, "--nodetect=") == a) {
 			nodetect = a + 11;
+
+		} else if (strstr(a, "--clipboard=") == a) {
+			ext_clipboard = a + 12;
 
 		} else if (strstr(a, "--ee") == a) {
 			esc_expiration = (a[4] == '=') ? atoi(&a[5]) : 100;
@@ -377,6 +391,16 @@ extern "C" int WinPortMain(const char *full_exe_path, int argc, char **argv, int
 
 	WinPortInitRegistry();
 	WinPortInitWellKnownEnv();
+	ClipboardBackendSetter ext_clipboard_backend_setter;
+	if (arg_opts.ext_clipboard.empty()) {
+		const std::string &ext_clipboard = InMyConfig("clipboard");
+		if (TestPath(ext_clipboard).Executable()) {
+			arg_opts.ext_clipboard = ext_clipboard;
+		}
+	}
+	if (!arg_opts.ext_clipboard.empty()) {
+		ext_clipboard_backend_setter.Set<ExtClipboardBackend>(arg_opts.ext_clipboard.c_str());
+	}
 //	g_winport_con_out->WriteString(L"Hello", 5);
 
 	int result = -1;
@@ -394,7 +418,7 @@ extern "C" int WinPortMain(const char *full_exe_path, int argc, char **argv, int
 				SudoAskpassImpl askass_impl;
 				SudoAskpassServer askpass_srv(&askass_impl);
 				WinPortMainBackendArg a{FAR2L_BACKEND_ABI_VERSION,
-					argc, argv, AppMain, &result, g_winport_con_out, g_winport_con_in};
+					argc, argv, AppMain, &result, g_winport_con_out, g_winport_con_in, !arg_opts.ext_clipboard.empty(), arg_opts.norgb};
 				if (!WinPortMainBackend_p(&a) ) {
 					fprintf(stderr, "Cannot use GUI backend\n");
 					arg_opts.tty = !arg_opts.notty;
@@ -417,7 +441,8 @@ extern "C" int WinPortMain(const char *full_exe_path, int argc, char **argv, int
 		if (arg_opts.mortal) {
 			SudoAskpassImpl askass_impl;
 			SudoAskpassServer askpass_srv(&askass_impl);
-			if (!WinPortMainTTY(full_exe_path, std_in, std_out, arg_opts.nodetect,
+			if (!WinPortMainTTY(full_exe_path, std_in, std_out,
+					!arg_opts.ext_clipboard.empty(), arg_opts.norgb, arg_opts.nodetect,
 					arg_opts.far2l_tty, arg_opts.esc_expiration, -1, argc, argv, AppMain, &result)) {
 				fprintf(stderr, "Cannot use TTY backend\n");
 			}
@@ -442,7 +467,8 @@ extern "C" int WinPortMain(const char *full_exe_path, int argc, char **argv, int
 						setsid();
 						SudoAskpassImpl askass_impl;
 						SudoAskpassServer askpass_srv(&askass_impl);
-						if (!WinPortMainTTY(full_exe_path, std_in, std_out, arg_opts.nodetect,
+						if (!WinPortMainTTY(full_exe_path, std_in, std_out,
+								!arg_opts.ext_clipboard.empty(), arg_opts.norgb, arg_opts.nodetect,
 								arg_opts.far2l_tty, arg_opts.esc_expiration, new_notify_pipe[1], argc, argv, AppMain, &result)) {
 							fprintf(stderr, "Cannot use TTY backend\n");
 						}

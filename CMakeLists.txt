@@ -92,6 +92,10 @@ if (NOT DEFINED UNRAR)
     set(UNRAR "bundled")
 endif()
 
+if (NOT DEFINED USESPDLOG)
+    set(USESPDLOG "NO")
+endif()
+
 # EACP disabled by default for now as FAR's GetCodePageInfo rejects all multibyte charsets due to BUGBUG.
 # Uncomment EACP-stuff here when that will be fixed. See https://github.com/elfmz/far2l/issues/1179
 #if (NOT DEFINED EACP)
@@ -111,24 +115,7 @@ endif()
 #   message(STATUS "${ColorRed}Building without East Asian codepages support due to EACP=${EACP}${ColorNormal}")
 #endif()
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
-    set(M4_NAME gm4)
-else()
-    set(M4_NAME m4)
-endif()
-
-find_program(M4_PROG NAMES ${M4_NAME})
-
-if(NOT M4_PROG)
-    message(FATAL_ERROR "${ColorRed}${M4_NAME} not found - please install it${ColorNormal}")
-endif ()
-set(M4 ${M4_PROG} -P "-DARCH=${CMAKE_SYSTEM_NAME} ${CMAKE_SYSTEM_PROCESSOR}" "-DMAJOR=${VERSION_MAJOR}" "-DMINOR=${VERSION_MINOR}" "-DPATCH=${VERSION_PATCH}")
-
 # set(RM rm) actually not needed: use $(CMAKE_COMMAND) -E remove
-find_program (GAWK NAMES gawk)
-if(NOT GAWK)
-  message(FATAL_ERROR "${ColorRed}gawk not found - please install it${ColorNormal}")
-endif ()
 
 if(MUSL)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__MUSL__")
@@ -396,7 +383,7 @@ if (NOT DEFINED MULTIARC OR MULTIARC)
 
     pkg_search_module(PCRE QUIET libpcre)
     if(NOT PCRE_FOUND)
-        message(WARNING "${ColorRed}libpcre not found, multiarc will have no custom archives support. Install libpcre and reconfigure far2l if you need that functionality.${ColorNormal}")
+        message(WARNING "${ColorRed}libpcre not found, multiarc will have no regexp support in custom archive format descriptions. Install libpcre and reconfigure far2l if you need that functionality.${ColorNormal}")
     endif()
 
     add_subdirectory (multiarc)
@@ -542,6 +529,7 @@ install(DIRECTORY "${INSTALL_DIR}/" DESTINATION "lib/far2l" USE_SOURCE_PERMISSIO
 
 install(DIRECTORY "${INSTALL_DIR}/" DESTINATION "share/far2l" USE_SOURCE_PERMISSIONS COMPONENT base FILES_MATCHING
     PATTERN "${EXECUTABLE_NAME}" EXCLUDE
+    PATTERN "far2ledit" EXCLUDE
     PATTERN "far2l_*" EXCLUDE
     PATTERN "*.far-plug-*" EXCLUDE
     PATTERN "*.broker" EXCLUDE
@@ -549,10 +537,12 @@ install(DIRECTORY "${INSTALL_DIR}/" DESTINATION "share/far2l" USE_SOURCE_PERMISS
     PATTERN "*")
 
 # setup some symlinks and remove deprecated stuff from previous installation
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ../../bin/far2l ${PROJECT_BINARY_DIR}/far2l_askpass)
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ../../bin/far2l ${PROJECT_BINARY_DIR}/far2l_sudoapp)
-install(FILES "${PROJECT_BINARY_DIR}/far2l_askpass" DESTINATION "lib/far2l" COMPONENT system)
-install(FILES "${PROJECT_BINARY_DIR}/far2l_sudoapp" DESTINATION "lib/far2l" COMPONENT system)
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ../../bin/far2l ${PROJECT_BINARY_DIR}/far2l/far2l_askpass)
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ../../bin/far2l ${PROJECT_BINARY_DIR}/far2l/far2l_sudoapp)
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink far2l ${PROJECT_BINARY_DIR}/far2l/far2ledit)
+install(FILES "${PROJECT_BINARY_DIR}/far2l/far2l_askpass" DESTINATION "lib/far2l" COMPONENT system)
+install(FILES "${PROJECT_BINARY_DIR}/far2l/far2l_sudoapp" DESTINATION "lib/far2l" COMPONENT system)
+install(FILES "${PROJECT_BINARY_DIR}/far2l/far2ledit" DESTINATION "bin" COMPONENT base)
 install(CODE "
     execute_process(COMMAND ${CMAKE_COMMAND} -E remove -f \"\${CMAKE_INSTALL_PREFIX}/lib/far2l/Plugins/objinfo/plug/objinfo.far-plug-mb\")
     " COMPONENT system)

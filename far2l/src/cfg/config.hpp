@@ -458,6 +458,8 @@ struct Options
 	int FoldersHistoryCount;
 	int DialogsHistoryCount;
 
+	BYTE HistoryShowTimes[8];
+
 	FindFileOptions FindOpt;
 
 	int LeftHeightDecrement;
@@ -609,6 +611,8 @@ struct Options
 
 	bool IsUserAdmin;
 	FARString strWindowTitle;
+
+	bool IsFirstStart;
 };
 
 extern Options Opt;
@@ -624,7 +628,8 @@ void SetConfirmations();
 void PluginsManagerSettings();
 void SetDizConfig();
 void ViewerConfig(ViewerOptions &ViOpt, bool Local = false);
-void EditorConfig(EditorOptions &EdOpt, bool Local = false);
+//void EditorConfig(EditorOptions &EdOpt, bool Local = false);
+void EditorConfig(EditorOptions &EdOpt, bool Local = false, int EdCfg_ExpandTabs = -1, int EdCfg_TabSize = -1);
 void NotificationsConfig(NotificationsOptions &NotifOpt);
 void ApplyConfig();
 void SetFolderInfoFiles();

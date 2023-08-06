@@ -217,6 +217,17 @@ Remove
 "Видалити"
 "Выдаліць"
 
+Change
+"Изменить"
+"Change"
+upd:"Change"
+upd:"Change"
+upd:"Change"
+upd:"Change"
+upd:"Change"
+upd:"Change"
+upd:"Change"
+
 HCancel
 l:
 "&Отмена"
@@ -316,6 +327,17 @@ HSplit
 "Dividir"
 "Роз&ділити"
 "Па&дзяліць"
+
+HChange
+"&Изменить"
+"C&hange"
+upd:"C&hange"
+upd:"C&hange"
+upd:"C&hange"
+upd:"C&hange"
+upd:"C&hange"
+upd:"C&hange"
+upd:"C&hange"
 
 Warning
 l:
@@ -2610,15 +2632,15 @@ upd:"Administrator"
 
 ConfigAutoCompleteTitle
 l:
-"Настройка автозавершения"
-"AutoComplete settings"
-upd:"AutoComplete settings"
-upd:"AutoComplete settings"
-upd:"AutoComplete settings"
-upd:"AutoComplete settings"
-"Opciones de autocompletar"
-"Налаштування автозавершення"
-"Налады самазавяршэння"
+"Настройка автозавершения и истории"
+"AutoComplete && History settings"
+upd:"AutoComplete && History settings"
+upd:"AutoComplete && History settings"
+upd:"AutoComplete && History settings"
+upd:"AutoComplete && History settings"
+"Opciones de autocompletar e historial"
+"Налаштування автозавершення та історії"
+"Налады самазавяршэння і гістарычных"
 
 ConfigAutoCompleteExceptions
 l:
@@ -6120,15 +6142,15 @@ EditF7
 "Пошук"
 
 EditF8
-"ANSI"
-"ANSI"
-"ANSI"
-"ANSI"
-"ANSI"
+"->ANSI"
+"->ANSI"
+"->ANSI"
+"->ANSI"
+"->ANSI"
 "Latin 2"
-"ANSI"
-"ANSI"
-"ANSI"
+"->ANSI"
+"->ANSI"
+"->ANSI"
 
 EditF9
 "Конфиг"
@@ -6199,15 +6221,27 @@ upd:"Spaces"
 
 EditF8DOS
 le:// don't count this - it's a F8 another text
-"OEM"
-"OEM"
-"OEM"
-"OEM"
-"OEM"
+"->OEM"
+"->OEM"
+"->OEM"
+"->OEM"
+"->OEM"
 "CP-1250"
-"OEM"
-"OEM"
-"OEM"
+"->OEM"
+"->OEM"
+"->OEM"
+
+EditF8UTF8
+le:// don't count this - it's a F8 another text
+"->UTF8"
+"->UTF8"
+"->UTF8"
+"->UTF8"
+"->UTF8"
+"->UTF8"
+"->UTF8"
+"->UTF8"
+"->UTF8"
 
 ViewF5Processed
 le:// don't count this - it's a F5 another text
@@ -7252,15 +7286,15 @@ SingleEditF7
 "Пошук"
 
 SingleEditF8
-"ANSI"
-"ANSI"
-"ANSI"
-"ANSI"
-"ANSI"
+"->ANSI"
+"->ANSI"
+"->ANSI"
+"->ANSI"
+"->ANSI"
 "Latin 2"
-"ANSI"
-"ANSI"
-"ANSI"
+"->ANSI"
+"->ANSI"
+"->ANSI"
 
 SingleEditF9
 ""
@@ -7308,15 +7342,27 @@ SingleEditF12
 
 SingleEditF8DOS
 le:// don't count this - it's a F8 another text
-"OEM"
-"OEM"
-"OEM"
-"OEM"
-"OEM"
+"->OEM"
+"->OEM"
+"->OEM"
+"->OEM"
+"->OEM"
 "CP 1250"
-"OEM"
-"OEM"
-"OEM"
+"->OEM"
+"->OEM"
+"->OEM"
+
+SingleEditF8UTF8
+le:// don't count this - it's a F8 another text
+"->UTF8"
+"->UTF8"
+"->UTF8"
+"->UTF8"
+"->UTF8"
+"->UTF8"
+"->UTF8"
+"->UTF8"
+"->UTF8"
 
 SingleEditShiftF1
 l:
@@ -9217,15 +9263,15 @@ ViewF7
 "Пошук"
 
 ViewF8
-"ANSI"
-"ANSI"
-"ANSI"
-"ANSI"
-"ANSI"
+"->ANSI"
+"->ANSI"
+"->ANSI"
+"->ANSI"
+"->ANSI"
 "Latin 2"
-"ANSI"
-"ANSI"
-"ANSI"
+"->ANSI"
+"->ANSI"
+"->ANSI"
 
 ViewF9
 "Конфиг"
@@ -9295,15 +9341,26 @@ l:// this is another text for F4
 "Тэкст"
 
 ViewF8DOS
-"OEM"
-"OEM"
-"OEM"
-"OEM"
-"OEM"
+"->OEM"
+"->OEM"
+"->OEM"
+"->OEM"
+"->OEM"
 "CP 1250"
-"OEM"
-"OEM"
-"OEM"
+"->OEM"
+"->OEM"
+"->OEM"
+
+ViewF8UTF8
+"->UTF8"
+"->UTF8"
+"->UTF8"
+"->UTF8"
+"->UTF8"
+"->UTF8"
+"->UTF8"
+"->UTF8"
+"->UTF8"
 
 ViewShiftF1
 l:
@@ -12054,26 +12111,26 @@ upd:"Other"
 "Іншыя"
 
 GetCodePageBottomTitle
-"Ctrl-H, Del, Ins, F4"
-"Ctrl-H, Del, Ins, F4"
-"Ctrl-H, Del, Ins, F4"
-"Strg-H, Entf, Einf, F4"
-"Ctrl-H, Del, Ins, F4"
-"Ctrl-H, Del, Ins, F4"
-"Ctrl-H, Del, Ins, F4"
-"Ctrl-H, Del, Ins, F4"
-"Ctrl-H, Del, Ins, F4"
+"Ctrl-H, Del, Ins, F4, Ctrl-Alt-F"
+"Ctrl-H, Del, Ins, F4, Ctrl-Alt-F"
+"Ctrl-H, Del, Ins, F4, Ctrl-Alt-F"
+"Strg-H, Entf, Einf, F4, Strg-Alt-F"
+"Ctrl-H, Del, Ins, F4, Ctrl-Alt-F"
+"Ctrl-H, Del, Ins, F4, Ctrl-Alt-F"
+"Ctrl-H, Del, Ins, F4, Ctrl-Alt-F"
+"Ctrl-H, Del, Ins, F4, Ctrl-Alt-F"
+"Ctrl-H, Del, Ins, F4, Ctrl-Alt-F"
 
 GetCodePageBottomShortTitle
-"Ctrl-H, Del, F4"
-"Ctrl-H, Del, F4"
-"Ctrl-H, Del, F4"
-"Strg-H, Entf, F4"
-"Ctrl-H, Del, F4"
-"Ctrl-H, Del, F4"
-"Ctrl-H, Del, F4"
-"Ctrl-H, Del, F4"
-"Ctrl-H, Del, F4"
+"Ctrl-H, Del, F4, Ctrl-Alt-F"
+"Ctrl-H, Del, F4, Ctrl-Alt-F"
+"Ctrl-H, Del, F4, Ctrl-Alt-F"
+"Strg-H, Entf, F4, Strg-Alt-F"
+"Ctrl-H, Del, F4, Ctrl-Alt-F"
+"Ctrl-H, Del, F4, Ctrl-Alt-F"
+"Ctrl-H, Del, F4, Ctrl-Alt-F"
+"Ctrl-H, Del, F4, Ctrl-Alt-F"
+"Ctrl-H, Del, F4, Ctrl-Alt-F"
 
 GetCodePageEditCodePageName
 "Изменить имя кодовой страницы"
@@ -13913,15 +13970,15 @@ upd:"Command line settings"
 "Налады &каманднага радка"
 
 MenuAutoCompleteSettings
-"На&стройки автозавершения"
-"AutoComplete settings"
-upd:"AutoComplete settings"
-upd:"AutoComplete settings"
-upd:"AutoComplete settings"
-upd:"AutoComplete settings"
-"Opciones de autocompletar"
-"На&лаштування автозавершення"
-"На&лады аўтазаканчэння"
+"На&стройки автозавершения и истории"
+"AutoComplete && History settings"
+upd:"AutoComplete && History settings"
+upd:"AutoComplete && History settings"
+upd:"AutoComplete && History settings"
+upd:"AutoComplete && History settings"
+"Opciones de autocompletar e historial"
+"На&лаштування автозавершення та історії"
+"На&лады аўтазаканчэння і гістарычных"
 
 MenuInfoPanelSettings
 "Нас&тройки информационной панели"
@@ -14976,15 +15033,15 @@ upd:"Show ne&twork drive parameters"
 "Адлюстроўваць налады се&ткавых дыскаў"
 
 ChangeDriveMenuFooter
-"Ins,Del,Shift-Del,F4,F9"
-"Ins,Del,Shift-Del,F4,F9"
-"Ins,Del,Shift-Del,F4,F9"
-"Ins,Del,Shift-Del,F4,F9"
-"Ins,Del,Shift-Del,F4,F9"
-"Ins,Del,Shift-Del,F4,F9"
-"Ins,Del,Shift-Del,F4,F9"
-"Ins,Del,Shift-Del,F4,F9"
-"Ins,Del,Shift-Del,F4,F9"
+"Ins,Del,Shift-Del,F4,F9,Ctrl-Alt-F"
+"Ins,Del,Shift-Del,F4,F9,Ctrl-Alt-F"
+"Ins,Del,Shift-Del,F4,F9,Ctrl-Alt-F"
+"Ins,Del,Shift-Del,F4,F9,Ctrl-Alt-F"
+"Ins,Del,Shift-Del,F4,F9,Ctrl-Alt-F"
+"Ins,Del,Shift-Del,F4,F9,Ctrl-Alt-F"
+"Ins,Del,Shift-Del,F4,F9,Ctrl-Alt-F"
+"Ins,Del,Shift-Del,F4,F9,Ctrl-Alt-F"
+"Ins,Del,Shift-Del,F4,F9,Ctrl-Alt-F"
 
 ChangeDriveExceptions
 "Исключения:    "
@@ -15042,15 +15099,15 @@ EditControlHistoryFooterNoDel
 "Up/Down,Enter,Esc"
 
 HistoryFooter
-"Up/Down,Enter,Esc,Shift-Del,Del,Ins,Ctrl-C"
-"Up/Down,Enter,Esc,Shift-Del,Del,Ins,Ctrl-C"
-"Up/Down,Enter,Esc,Shift-Del,Del,Ins,Ctrl-C"
-"Up/Down,Enter,Esc,Shift-Del,Del,Ins,Ctrl-C"
-"Up/Down,Enter,Esc,Shift-Del,Del,Ins,Ctrl-C"
-"Up/Down,Enter,Esc,Shift-Del,Del,Ins,Ctrl-C"
-"Up/Down,Enter,Esc,Shift-Del,Del,Ins,Ctrl-C"
-"Up/Down,Enter,Esc,Shift-Del,Del,Ins,Ctrl-C"
-"Up/Down,Enter,Esc,Shift-Del,Del,Ins,Ctrl-C"
+"Up/Down,Enter,Esc,Shift-Del,Del,Ins,Ctrl-C,Ctrl-T,Ctrl-F10,Ctrl-Alt-F"
+"Up/Down,Enter,Esc,Shift-Del,Del,Ins,Ctrl-C,Ctrl-T,Ctrl-F10,Ctrl-Alt-F"
+"Up/Down,Enter,Esc,Shift-Del,Del,Ins,Ctrl-C,Ctrl-T,Ctrl-F10,Ctrl-Alt-F"
+"Up/Down,Enter,Esc,Shift-Del,Del,Ins,Ctrl-C,Ctrl-T,Ctrl-F10,Ctrl-Alt-F"
+"Up/Down,Enter,Esc,Shift-Del,Del,Ins,Ctrl-C,Ctrl-T,Ctrl-F10,Ctrl-Alt-F"
+"Up/Down,Enter,Esc,Shift-Del,Del,Ins,Ctrl-C,Ctrl-T,Ctrl-F10,Ctrl-Alt-F"
+"Up/Down,Enter,Esc,Shift-Del,Del,Ins,Ctrl-C,Ctrl-T,Ctrl-F10,Ctrl-Alt-F"
+"Up/Down,Enter,Esc,Shift-Del,Del,Ins,Ctrl-C,Ctrl-T,Ctrl-F10,Ctrl-Alt-F"
+"Up/Down,Enter,Esc,Shift-Del,Del,Ins,Ctrl-C,Ctrl-T,Ctrl-F10,Ctrl-Alt-F"
 
 SearchFileTitle
 l:
@@ -15431,6 +15488,61 @@ SetAttrJunction
 "Зв'язок:"
 "Сувязь:"
 
+SetAttrInfoSelAll
+"выбрано %d элементов"
+"selected %d items"
+upd:"selected %d items"
+upd:"selected %d items"
+upd:"selected %d items"
+upd:"selected %d items"
+upd:"selected %d items"
+upd:"selected %d items"
+upd:"selected %d items"
+
+SetAttrInfoSelDirs
+"%lsкаталогов: %d"
+"%lsdirs: %d"
+upd:"%lsdirs: %d"
+upd:"%lsdirs: %d"
+upd:"%lsdirs: %d"
+upd:"%lsdirs: %d"
+upd:"%lsdirs: %d"
+upd:"%lsdirs: %d"
+upd:"%lsdirs: %d"
+
+SetAttrInfoSelFiles
+"%lsфайлов: %d"
+"%lsfiles: %d"
+upd:"%lsfiles: %d"
+upd:"%lsfiles: %d"
+upd:"%lsfiles: %d"
+upd:"%lsfiles: %d"
+upd:"%lsfiles: %d"
+upd:"%lsfiles: %d"
+upd:"%lsfiles: %d"
+
+SetAttrInfoSelSymDirs
+"%lsсимлинков на каталоги: %d"
+"%lssymlinks to dirs: %d"
+upd:"%lssymlinks to dirs: %d"
+upd:"%lssymlinks to dirs: %d"
+upd:"%lssymlinks to dirs: %d"
+upd:"%lssymlinks to dirs: %d"
+upd:"%lssymlinks to dirs: %d"
+upd:"%lssymlinks to dirs: %d"
+upd:"%lssymlinks to dirs: %d"
+
+SetAttrInfoSelSymFiles
+"%lsсимлинков на файлы: %d"
+"%lssymlinks to files: %d"
+upd:"%lssymlinks to files: %d"
+upd:"%lssymlinks to files: %d"
+upd:"%lssymlinks to files: %d"
+upd:"%lssymlinks to files: %d"
+upd:"%lssymlinks to files: %d"
+upd:"%lssymlinks to files: %d"
+upd:"%lssymlinks to files: %d"
+
 SetAttrSymlink
 "Ссылка:"
 "Symlink:"
@@ -15441,6 +15553,61 @@ SetAttrSymlink
 "Enlace:"
 "Посилання:"
 "Спасылак:"
+
+SetAttrSymlinkWarn1
+"Для симлинка '%ls'"
+"For symlink '%ls'"
+upd:"For symlink '%ls'"
+upd:"For symlink '%ls'"
+upd:"For symlink '%ls'"
+upd:"For symlink '%ls'"
+upd:"For symlink '%ls'"
+upd:"For symlink '%ls'"
+upd:"For symlink '%ls'"
+
+SetAttrSymlinkWarn2
+"нового объекта '%ls' не существует"
+"new target '%ls' does not exist"
+upd:"new target '%ls' does not exist"
+upd:"new target '%ls' does not exist"
+upd:"new target '%ls' does not exist"
+upd:"new target '%ls' does not exist"
+upd:"new target '%ls' does not exist"
+upd:"new target '%ls' does not exist"
+upd:"new target '%ls' does not exist"
+
+SetAttrSymlinkWarn3
+"(текущий объект '%ls')"
+"(current target '%ls')"
+upd:"(current target '%ls')"
+upd:"(current target '%ls')"
+upd:"(current target '%ls')"
+upd:"(current target '%ls')"
+upd:"(current target '%ls')"
+upd:"(current target '%ls')"
+upd:"(current target '%ls')"
+
+SetAttrSymlinkWarn4
+"Пропустить или все-равно изменить объект симлинка?"
+"Skip or change symlink target anyway?"
+upd:"Skip or change symlink target anyway?"
+upd:"Skip or change symlink target anyway?"
+upd:"Skip or change symlink target anyway?"
+upd:"Skip or change symlink target anyway?"
+upd:"Skip or change symlink target anyway?"
+upd:"Skip or change symlink target anyway?"
+upd:"Skip or change symlink target anyway?"
+
+SetAttrSymlinkFailed
+"Ошибка изменения символической ссылки"
+"Error changing symbolic link"
+upd:"Error changing symbolic link"
+upd:"Error changing symbolic link"
+upd:"Error changing symbolic link"
+upd:"Error changing symbolic link"
+upd:"Error changing symbolic link"
+"Ошибка зміни символічних посилань"
+"Шыбка змены сімвалічных спасылак"
 
 SetAttrVolMount
 "Том:"
@@ -15686,7 +15853,7 @@ upd:"RRRRR%cMM%cDD gg%cmm%css%cms"
 "ГГГГГ%cММ%cДД чч%cмм%cсс%cмс"
 
 SetAttrBriefInfo
-"&Описание:"
+"Опи&сание:"
 "&Info:"
 upd:"&Info:"
 upd:"&Info:"
@@ -15696,16 +15863,38 @@ upd:"&Info:"
 "&Опис:"
 "&Апісанне:"
 
-SetAttrLinkDest
-"&Ссылка:"
+SetAttrSymlinkContent
+"&Ссылка: "
 "&Symlink:"
 upd:"&Symlink:"
 upd:"&Symlink:"
 upd:"&Symlink:"
 upd:"&Symlink:"
 upd:"&Symlink:"
-"По&силання:"
-"&Спасылка:"
+"По&сил..:"
+"&Спасыл.:"
+
+SetAttrSymlinkObject
+"Объект: "
+"Object: "
+upd:"Object: "
+upd:"Object: "
+upd:"Object: "
+upd:"Object: "
+upd:"Object: "
+"Об'єкт: "
+"Аб'ект: "
+
+SetAttrSymlinkObjectInfo
+"Опис-ие:"
+"Info:   "
+upd:"Info:   "
+upd:"Info:   "
+upd:"Info:   "
+upd:"Info:   "
+upd:"Info:   "
+"Опис:   "
+"Апіс..: "
 
 SetAttrSetting
 l:
@@ -17689,15 +17878,15 @@ LocalMenuTitle
 "Мясцовае меню"
 
 MainMenuBottomTitle
-"Редактирование: Del,Ins,F4,Ctrl-F4"
-"Edit: Del,Ins,F4,Ctrl-F4"
-"Edit: Del,Ins,F4,Ctrl-F4"
-"Bearb.: Entf,Einf,F4,Ctrl-F4"
-"Szerk.: Del,Ins,F4,Ctrl-F4"
-"Edycja: Del,Ins,F4,Ctrl-F4"
-"Editar: Del,Ins,F4"
-"Редагування: Del,Ins,F4,Ctrl-F4"
-"Змена: Del,Ins,F4,Ctrl-F4"
+"Редактирование: Del,Ins,F4,Ctrl-F4,Ctrl-Alt-F"
+"Edit: Del,Ins,F4,Ctrl-F4,Ctrl-Alt-F"
+"Edit: Del,Ins,F4,Ctrl-F4,Ctrl-Alt-F"
+"Bearb.: Entf,Einf,F4,Ctrl-F4,Ctrl-Alt-F"
+"Szerk.: Del,Ins,F4,Ctrl-F4,Ctrl-Alt-F"
+"Edycja: Del,Ins,F4,Ctrl-F4,Ctrl-Alt-F"
+"Editar: Del,Ins,F4,Ctrl-Alt-F"
+"Редагування: Del,Ins,F4,Ctrl-F4,Ctrl-Alt-F"
+"Змена: Del,Ins,F4,Ctrl-F4,Ctrl-Alt-F"
 
 AskDeleteMenuItem
 "Вы хотите удалить пункт меню"
@@ -24612,15 +24801,15 @@ FileFilterAttr
 "Атр&ыбуты"
 
 FileFilterAttrR
-"&Только для чтения"
+"&Только чтение"
 "&Read only"
 "Jen pro čt&ení"
 "Sch&reibschutz"
 "&Csak olvasható"
 "&Do odczytu"
 "Sólo Lectu&ra"
-"&Тільки для читання"
-"&Толькі для чытання"
+"&Тільки читання"
+"&Толькі чытанне"
 
 FileFilterAttrA
 "&Архивный"
@@ -24722,15 +24911,15 @@ FileFilterAttrT
 "&Часовы"
 
 FileFilterAttrReparse
-"Симво&л. ссылка"
+"Симв. ссы&лка"
 "Symbolic lin&k"
-"Sybolický li&nk"
-"Symbolischer Lin&k"
-"S&zimbolikus link"
-"Link &symboliczny"
-"Enlace simbólic&o"
-"Симво&л. посилання"
-"Сімва&лічны спасылак"
+"Sybol. li&nk"
+"Symbol. Lin&k"
+"S&zimb. link"
+"Link &symbol."
+"Enlace simból."
+"Симв. поси&лання"
+"Сімв. спасы&лак"
 
 FileFilterAttrOffline
 "Автономны&й"
@@ -24775,6 +24964,50 @@ upd:"&Broken"
 upd:"&Broken"
 "Несправний"
 "Няспраўны"
+
+FileFilterAttrDevChar
+"Симв.устройство"
+"Char device"
+upd:"Char device"
+upd:"Char device"
+upd:"Char device"
+upd:"Char device"
+upd:"Char device"
+"Симв.пристрій"
+"Сімв.прылада"
+
+FileFilterAttrDevBlock
+"Блоч.устройство"
+"Block device"
+upd:"Block device"
+upd:"Block device"
+upd:"Block device"
+upd:"Block device"
+upd:"Block device"
+"Блок.пристрій"
+"Блоч.прылада"
+
+FileFilterAttrDevFIFO
+"FIFO"
+"FIFO"
+"FIFO"
+"FIFO"
+"FIFO"
+"FIFO"
+"FIFO"
+"FIFO"
+"FIFO"
+
+FileFilterAttrDevSock
+"Сокет"
+"Socket"
+upd:"Socket"
+upd:"Socket"
+upd:"Socket"
+upd:"Socket"
+upd:"Socket"
+"Сокет"
+"Сокет"
 
 FileFilterReset
 "Очистит&ь"
@@ -25150,6 +25383,172 @@ upd:"Other panel"
 upd:"Other panel"
 "Інш. панель"
 "Іншая панэль"
+
+HistoryCommandTitle
+"Информация о команде"
+"History Command Info"
+upd:"History Command Info"
+upd:"History Command Info"
+upd:"History Command Info"
+upd:"History Command Info"
+upd:"History Command Info"
+"Інформація про команду"
+"Інфармацыя аб камандзе"
+
+HistoryCommandLine
+"   Команда: "
+"  Command: "
+upd:"  Command: "
+upd:"  Command: "
+upd:"  Command: "
+upd:"  Command: "
+upd:"  Command: "
+"   Команда: "
+"   Каманда: "
+
+HistoryCommandDir
+"Директория: "
+"Directory: "
+upd:"Directory: "
+upd:"Directory: "
+upd:"Directory: "
+upd:"Directory: "
+upd:"Directory: "
+"Директорія: "
+"Дырэкторыя: "
+
+HistoryCommandClose
+"Закрыть"
+"Close"
+upd:"Close"
+upd:"Close"
+upd:"Close"
+upd:"Close"
+upd:"Close"
+"Закрити"
+"Закрыць"
+
+HistoryCommandChDir
+"В &дир"
+"To &dir"
+upd:"To &dir"
+upd:"To &dir"
+upd:"To &dir"
+upd:"To &dir"
+upd:"To &dir"
+"У &дир"
+"У &дыр"
+
+HistoryCommandRunUp
+"&Подготовить"
+"&Run-up"
+upd:"&Run-up"
+upd:"&Run-up"
+upd:"&Run-up"
+upd:"&Run-up"
+upd:"&Run-up"
+"&Підготувати"
+"&Падрыхтаваць"
+
+
+EditorConfigOrgConflict
+"Редактор и .editorconfig"
+"Editor and .editorconfig"
+upd:"Editor and .editorconfig"
+upd:"Editor and .editorconfig"
+upd:"Editor and .editorconfig"
+upd:"Editor and .editorconfig"
+upd:"Editor and .editorconfig"
+"Редактор та .editorconfig"
+"Рэдактар і .editorconfig"
+
+EditorConfigOrgFile
+"Файл расположен в (под)директории с .editorconfig"
+"File located in (sub)directory with .editorconfig"
+upd:"File located in (sub)directory with .editorconfig"
+upd:"File located in (sub)directory with .editorconfig"
+upd:"File located in (sub)directory with .editorconfig"
+upd:"File located in (sub)directory with .editorconfig"
+upd:"File located in (sub)directory with .editorconfig"
+"Файл розташований у (під)директорії з .editorconfig"
+"Файл размешчаны ў (пад)дырэкторыі з .editorconfig"
+
+EditorConfigOrgDisable
+"Использование .editorconfig можно отключить\nв меню->Параметры->Настройки редактора"
+"You can disable .editorconfig processing globally\nin main menu->Options->Editor settings"
+upd:"You can disable .editorconfig processing globally\nin main menu->Options->Editor settings"
+upd:"You can disable .editorconfig processing globally\nin main menu->Options->Editor settings"
+upd:"You can disable .editorconfig processing globally\nin main menu->Options->Editor settings"
+upd:"You can disable .editorconfig processing globally\nin main menu->Options->Editor settings"
+upd:"You can disable .editorconfig processing globally\nin main menu->Options->Editor settings"
+"Використання .editorconfig можна вимкнути\nв меню->Параметри->Налаштування редактора"
+"Выкарыстанне .editorconfig можна адключыць\nу меню->Параметры->Налады рэдактара"
+
+EditorConfigOrgValueOfIndentSize
+"В .editorconfig 'indent_size' установлен '%d'"
+"In .editorconfig 'indent_size' set to '%d'"
+upd:"In .editorconfig 'indent_size' set to '%d'"
+upd:"In .editorconfig 'indent_size' set to '%d'"
+upd:"In .editorconfig 'indent_size' set to '%d'"
+upd:"In .editorconfig 'indent_size' set to '%d'"
+upd:"In .editorconfig 'indent_size' set to '%d'"
+"У .editorconfig 'indent_size' встановлено '%d'"
+"У .editorconfig 'indent_size' усталяваны '%d'"
+
+EditorConfigOrgValueOfIndentStyle
+"В .editorconfig 'indent_style' установлен '%s'"
+"In .editorconfig 'indent_style' set to '%s'"
+upd:"In .editorconfig 'indent_style' set to '%s'"
+upd:"In .editorconfig 'indent_style' set to '%s'"
+upd:"In .editorconfig 'indent_style' set to '%s'"
+upd:"In .editorconfig 'indent_style' set to '%s'"
+upd:"In .editorconfig 'indent_style' set to '%s'"
+"У .editorconfig 'indent_style' встановлено '%s'"
+"У .editorconfig 'indent_style' усталяваны '%s'"
+
+EditorConfigOrgValueOfCharset
+"В .editorconfig 'charset' установлен '%d'"
+"In .editorconfig 'charset' set to '%d'"
+upd:"In .editorconfig 'charset' set to '%d'"
+upd:"In .editorconfig 'charset' set to '%d'"
+upd:"In .editorconfig 'charset' set to '%d'"
+upd:"In .editorconfig 'charset' set to '%d'"
+upd:"In .editorconfig 'charset' set to '%d'"
+"У .editorconfig 'charset' встановлено '%d'"
+"У .editorconfig 'charset' усталяваны '%d'"
+
+EditorConfigOrgProblemIndentSize
+"В этом случае пользователь не может изменить размер таба по Shift-F5"
+"In this case user can't change tab size by Shift-F5"
+upd:"In this case user can't change tab size by Shift-F5"
+upd:"In this case user can't change tab size by Shift-F5"
+upd:"In this case user can't change tab size by Shift-F5"
+upd:"In this case user can't change tab size by Shift-F5"
+upd:"In this case user can't change tab size by Shift-F5"
+"У цьому випадку користувач не може змінити розмір таба Shift-F5"
+"У гэтым выпадку карыстач не можа змяніць памер таба па Shift-F5"
+
+EditorConfigOrgProblemIndentStyle
+"В этом случае пользователь не может изменить стиль таба по Ctrl-F5"
+"In this case user can't change tab style by Ctrl-F5"
+upd:"In this case user can't change tab style by Ctrl-F5"
+upd:"In this case user can't change tab style by Ctrl-F5"
+upd:"In this case user can't change tab style by Ctrl-F5"
+upd:"In this case user can't change tab style by Ctrl-F5"
+upd:"In this case user can't change tab style by Ctrl-F5"
+"У цьому випадку користувач не може змінити стиль таба за Ctrl-F5"
+"У гэтым выпадку карыстач не можа змяніць стыль таба па Ctrl-F5"
+
+EditorConfigOrgProblemCharset
+"В этом случае пользователь не может изменить кодировку по F8 or Shift-F8"
+"In this case user can't change codepage by F8 or Shift-F8"
+upd:"In this case user can't change codepage by F8 or Shift-F8"
+upd:"In this case user can't change codepage by F8 or Shift-F8"
+upd:"In this case user can't change codepage by F8 or Shift-F8"
+upd:"In this case user can't change codepage by F8 or Shift-F8"
+upd:"In this case user can't change codepage by F8 or Shift-F8"
+"У цьому випадку користувач не може змінити кодування F8 або Shift-F8"
+"У гэтым выпадку карыстач не можа змяніць кадоўку па F8 or Shift-F8"
 
 #Must be the last
 NewFileName

@@ -37,7 +37,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fileedit.hpp"
 #include "keyboard.hpp"
 #include "codepage.hpp"
-#include "EditorConfigOrg.hpp"
 #include "lang.hpp"
 #include "macroopcode.hpp"
 #include "keys.hpp"
@@ -728,6 +727,19 @@ int FileEditor::ProcessKey(int Key)
 	return ReProcessKey(Key, FALSE);
 }
 
+static void EditorConfigOrgConflictMessage(const FARString &value, const struct FarLangMsg &problem)
+{
+	FARString disable_line1, disable_line2;
+	disable_line1 = Msg::EditorConfigOrgDisable;
+	size_t p;
+	if (disable_line1.Pos(p, '\n')) {
+		disable_line2 = disable_line1.SubStr(p + 1);
+		disable_line1.Truncate(p);
+	}
+	Message(MSG_WARNING, 1, Msg::EditorConfigOrgConflict,
+		Msg::EditorConfigOrgFile, value, problem, L"", disable_line1, disable_line2, Msg::Ok);
+}
+
 int FileEditor::ReProcessKey(int Key, int CalledFromControl)
 {
 	SudoClientRegion sdc_rgn;
@@ -1100,11 +1112,22 @@ int FileEditor::ReProcessKey(int Key, int CalledFromControl)
 				return TRUE;
 
 			case KEY_SHIFTF5:
+				if (EdCfg && EdCfg->TabSize > 0) {
+					FARString strTmp; strTmp.Format(Msg::EditorConfigOrgValueOfIndentSize, EdCfg->TabSize);
+					EditorConfigOrgConflictMessage(strTmp, Msg::EditorConfigOrgProblemIndentSize);
+					return TRUE;
+				}
 				ChooseTabSizeMenu();
 				ShowStatus();
 				return TRUE;
 
 			case KEY_CTRLF5:
+				if (EdCfg && EdCfg->ExpandTabs >= 0) {
+					FARString strTmp; strTmp.Format(Msg::EditorConfigOrgValueOfIndentStyle,
+						EdCfg->ExpandTabs==EXPAND_NOTABS ? "tab" : EdCfg->ExpandTabs==EXPAND_NEWTABS ? "space" : "????" );
+					EditorConfigOrgConflictMessage(strTmp, Msg::EditorConfigOrgProblemIndentStyle);
+					return TRUE;
+				}
 				m_editor->SetConvertTabs(
 						(m_editor->GetConvertTabs() != EXPAND_NOTABS) ? EXPAND_NOTABS : EXPAND_NEWTABS);
 				m_editor->EnableSaveTabSettings();
@@ -1168,9 +1191,21 @@ int FileEditor::ReProcessKey(int Key, int CalledFromControl)
 			}
 			case KEY_F8:
 			case KEY_SHIFTF8: {
+				if (EdCfg && EdCfg->CodePage > 0) {
+					FARString strTmp;
+					strTmp.Format(Msg::EditorConfigOrgValueOfCharset, EdCfg->CodePage);
+					EditorConfigOrgConflictMessage(strTmp, Msg::EditorConfigOrgProblemCharset);
+					return TRUE;
+				}
 				UINT codepage;
 				if (Key == KEY_F8) {
-					codepage = (m_codepage == WINPORT(GetACP)() ? WINPORT(GetOEMCP)() : WINPORT(GetACP)());
+					//codepage = (m_codepage == WINPORT(GetACP)() ? WINPORT(GetOEMCP)() : WINPORT(GetACP)());
+					if (m_codepage == CP_UTF8)
+						codepage = WINPORT(GetACP)();
+					else if (m_codepage == WINPORT(GetACP)() )
+						codepage = WINPORT(GetOEMCP)();
+					else // if (m_codepage == WINPORT(GetOEMCP)() )
+						codepage = CP_UTF8;
 				} else {
 					codepage = SelectCodePage(m_codepage, false, true, false, true);
 					if (codepage == CP_AUTODETECT) {
@@ -1196,6 +1231,7 @@ int FileEditor::ReProcessKey(int Key, int CalledFromControl)
 						} else {
 							SetCodePage(codepage);
 						}
+						Show(); // need to force redraw after F8 UTF8<->ANSI/OEM
 						ChangeEditKeyBar();
 					} else
 						Message(0, 1, Msg::EditTitle, L"Save file before changing this codepage", Msg::HOk,
@@ -1209,7 +1245,10 @@ int FileEditor::ReProcessKey(int Key, int CalledFromControl)
 				EditorOptions EdOpt;
 				GetEditorOptions(EdOpt);
 				EditorOptions SavedEdOpt = EdOpt;
-				EditorConfig(EdOpt, true);	// $ 27.11.2001 DJ - Local в EditorConfig
+				//EditorConfig(EdOpt, true);	// $ 27.11.2001 DJ - Local в EditorConfig
+				EditorConfig(EdOpt, true,	// $ 27.11.2001 DJ - Local в EditorConfig
+					EdCfg ? EdCfg->ExpandTabs : -1,
+					EdCfg ? EdCfg->TabSize : -1);
 				EditKeyBar.Refresh(true);	//???? Нужно ли????
 				SetEditorOptions(EdOpt);
 				if (SavedEdOpt.TabSize != EdOpt.TabSize || SavedEdOpt.ExpandTabs != EdOpt.ExpandTabs)
@@ -1295,18 +1334,20 @@ int FileEditor::LoadFile(const wchar_t *Name, int &UserBreak)
 	if (Opt.EdOpt.UseEditorConfigOrg) {
 		FARString strFullName;
 		ConvertNameToFull(Name, strFullName);
-		EditorConfigOrg EdCfg;
-		EdCfg.Populate(strFullName.GetMB().c_str());
-		if (EdCfg.CodePageBOM >= 0)
-			m_AddSignature = (EdCfg.CodePageBOM == 0) ? FB_NO : FB_YES;
-		if (EdCfg.CodePage > 0)
-			m_codepage = EdCfg.CodePage;
-		if (EdCfg.EndOfLine)
-			far_wcsncpy(m_editor->GlobalEOL, EdCfg.EndOfLine, ARRAYSIZE(m_editor->GlobalEOL));
-		if (EdCfg.TabSize > 0)
-			m_editor->SetTabSize(EdCfg.TabSize);
-		if (EdCfg.ExpandTabs >= 0)
-			m_editor->SetConvertTabs(EdCfg.ExpandTabs);
+		EdCfg.reset(new EditorConfigOrg);
+		EdCfg->Populate(strFullName.GetMB().c_str());
+		if (EdCfg->CodePageBOM >= 0)
+			m_AddSignature = (EdCfg->CodePageBOM == 0) ? FB_NO : FB_YES;
+		if (EdCfg->CodePage > 0)
+			m_codepage = EdCfg->CodePage;
+		if (EdCfg->EndOfLine)
+			far_wcsncpy(m_editor->GlobalEOL, EdCfg->EndOfLine, ARRAYSIZE(m_editor->GlobalEOL));
+		if (EdCfg->TabSize > 0)
+			m_editor->SetTabSize(EdCfg->TabSize);
+		if (EdCfg->ExpandTabs >= 0)
+			m_editor->SetConvertTabs(EdCfg->ExpandTabs);
+	} else {
+		EdCfg.reset();
 	}
 
 	TPreRedrawFuncGuard preRedrawFuncGuard(Editor::PR_EditorShowMsg);
@@ -2078,10 +2119,12 @@ void FileEditor::SetTitle(const wchar_t *Title)
 
 void FileEditor::SetEditKeyBarStatefulLabels()
 {
-	if (m_codepage != WINPORT(GetOEMCP)())
+	if (m_codepage == CP_UTF8)
+		EditKeyBar.Change(KBL_MAIN, (Opt.OnlyEditorViewerUsed ? Msg::SingleEditF8 : Msg::EditF8), 7);
+	else if (m_codepage == WINPORT(GetACP)())
 		EditKeyBar.Change(KBL_MAIN, (Opt.OnlyEditorViewerUsed ? Msg::SingleEditF8DOS : Msg::EditF8DOS), 7);
 	else
-		EditKeyBar.Change(KBL_MAIN, (Opt.OnlyEditorViewerUsed ? Msg::SingleEditF8 : Msg::EditF8), 7);
+		EditKeyBar.Change(KBL_MAIN, (Opt.OnlyEditorViewerUsed ? Msg::SingleEditF8UTF8 : Msg::EditF8UTF8), 7);
 
 	EditKeyBar.Change(KBL_MAIN, m_editor->GetShowWhiteSpace() ? Msg::EditF5Hide : Msg::EditF5, 4);
 

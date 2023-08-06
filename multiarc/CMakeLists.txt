@@ -20,7 +20,7 @@ set(SOURCES
     src/formats/lzh/lzh.cpp
 
         src/formats/7z/7z.cpp
-        src/formats/7z/7zMain.c
+        src/formats/7z/7zMain.cpp
         src/formats/7z/C/Lzma86Dec.c
         src/formats/7z/C/7zDec.c
         src/formats/7z/C/Ppmd7Dec.c
@@ -148,12 +148,10 @@ elseif(UNRAR)
     )
 endif()
 
-if(PCRE_FOUND)
-    set(SOURCES
-        ${SOURCES}
-        src/formats/custom/custom.cpp
-    )
-endif()
+set(SOURCES
+    ${SOURCES}
+    src/formats/custom/custom.cpp
+)
 
 if(LibArchive_FOUND)
     set(SOURCES

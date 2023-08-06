@@ -74,6 +74,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "SafeMMap.hpp"
 #include "ConfigRW.hpp"
 #include "ConfigSaveLoad.hpp"
+#include "help.hpp"
 
 #ifdef DIRECT_RT
 int DirectRT = 0;
@@ -105,8 +106,8 @@ static void print_help(const char *self)
 			"      View the specified file.\n"
 			" -v - command line\n"
 			"      Executes given command line and opens viewer with its output.\n"
-			" -e[<line>[:<pos>]] <filename>\n"
-			"      Edit the specified file with optional cursor position specification.\n"
+			" -e[<line>[:<pos>]] [filename]\n"
+			"      Edit the specified file with optional cursor position specification or empty new file.\n"
 			" -e[<line>[:<pos>]] - command line\n"
 			"      Executes given command line and opens editor with its output.\n"
 			"\n",
@@ -313,6 +314,8 @@ static int MainProcess(FARString strEditViewArg, FARString strDestName1, FARStri
 			}
 
 			fprintf(stderr, "STARTUP: %llu\n", (unsigned long long)(clock() - cl_start));
+			if( Opt.IsFirstStart )
+				Help::Present(L"Far2lGettingStarted",L"",FHELP_NOSHOWERROR);
 			FrameManager->EnterMainLoop();
 		}
 
@@ -327,19 +330,19 @@ static int MainProcess(FARString strEditViewArg, FARString strDestName1, FARStri
 	return 0;
 }
 
-static void SetupFarPath(int argc, char **argv)
+static void SetupFarPath(const char *arg0)
 {
 	InMyTemp();		// pre-cache in env temp pathes
 	InitCurrentDirectory();
 
-	char buf[PATH_MAX + 1] = {};
+	char buf[PATH_MAX + 1];
 	ssize_t buf_sz = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
 	if (buf_sz > 0 && buf_sz < (ssize_t)sizeof(buf) - 1 && buf[0] == GOOD_SLASH) {
 		buf[buf_sz] = 0;
 		g_strFarModuleName = buf;
 
 	} else {
-		g_strFarModuleName = LookupExecutable(argv[0]);
+		g_strFarModuleName = LookupExecutable(arg0);
 	}
 
 	FARString dir = g_strFarModuleName;
@@ -416,13 +419,13 @@ int FarAppMain(int argc, char **argv)
 		unsetenv("FARADMINMODE");
 	}
 
-	// run by symlinc in editor mode
+	// run by symlink in editor mode
 	if (strstr(argv[0], "far2ledit") != NULL) {
 		Opt.OnlyEditorViewerUsed = Options::ONLY_EDITOR;
 		if (argc > 1) {
 			strEditViewArg = argv[argc - 1];	// use last argument
 		} else {
-			strEditViewArg = "NewFile.txt";
+			strEditViewArg = "";
 		}
 	}
 
@@ -479,6 +482,11 @@ int FarAppMain(int argc, char **argv)
 							I++;
 						}
 					}
+					else { // -e without filename => new file to editor
+						Opt.OnlyEditorViewerUsed = Options::ONLY_EDITOR;
+						strEditViewArg = "";
+					}
+
 
 					break;
 				case L'V':
@@ -612,6 +620,11 @@ int FarAppMain(int argc, char **argv)
 
 	CheckForImportLegacyShortcuts();
 
+	// (!!!) temporary STUB because now Editor can not input filename "", see: fileedit.cpp -> FileEditor::Init()
+	// default Editor file name for new empty file
+	if ( Opt.OnlyEditorViewerUsed == Options::ONLY_EDITOR && strEditViewArg.IsEmpty() )
+		strEditViewArg = Msg::NewFileName;
+
 	int Result = MainProcess(strEditViewArg, DestNames[0], DestNames[1], StartLine, StartChar);
 
 	EmptyInternalClipboard();
@@ -670,43 +683,6 @@ static int libexec(const char *lib, const char *cd, const char *symbol, int argc
 	return libexec_main(argc, argv);
 }
 
-int FarDispatchAnsiApplicationProtocolCommand(const char *str)
-{
-	const char *space = strchr(str, ' ');
-	if (!space)
-		return -1;
-
-	DWORD r;
-	std::string command(str, space - str);
-	std::string argument(UnescapeUnprintable(space + 1));
-	if (command.find("v") == 0) {
-		ModalViewFile(argument);
-		r = 0;
-	} else if (command.find("e") == 0) {
-		int StartLine = 0, StartChar = 0;
-		if (command.size() > 1 && isdigit(command[1])) {
-			StartLine = atoi(command.c_str() + 1);
-			size_t p = command.find(':');
-			if (p != std::string::npos)
-				StartChar = atoi(command.c_str() + p + 1);
-		}
-		// FIXME: modality doesn't work with this FFILEEDIT_ENABLEF6! (see abort after loop)
-		FileEditor *Editor = new FileEditor(StrMB2Wide(argument).c_str(), CP_AUTODETECT,
-				FFILEEDIT_DISABLEHISTORY | FFILEEDIT_SAVETOSAVEAS | FFILEEDIT_CANNEWFILE, StartLine,
-				StartChar);
-		r = Editor->GetExitCode();
-		if (r != XC_LOADING_INTERRUPTED && r != XC_OPEN_ERROR) {
-			FrameManager->ExecuteModal();
-			// abort();
-		} else
-			delete Editor;
-		r = 0;
-	} else {
-		r = -1;
-	}
-
-	return r;
-}
 
 static void SetCustomSettings(const char *arg)
 {
@@ -776,7 +752,12 @@ int _cdecl main(int argc, char *argv[])
 
 	setlocale(LC_ALL, "");	// otherwise non-latin keys missing with XIM input method
 
-	SetupFarPath(argc, argv);
+	SetupFarPath(argv[0]);
+
+	{	// if CONFIG_INI is not present => first start & opt for show Help "FAR2L features - Getting Started"
+		struct stat stat_buf;
+		Opt.IsFirstStart = stat( InMyConfig(CONFIG_INI).c_str(), &stat_buf ) == -1;
+	}
 
 	SafeMMap::SignalHandlerRegistrar smm_shr;
 

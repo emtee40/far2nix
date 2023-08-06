@@ -43,8 +43,6 @@
 const char *VT_TranslateSpecialKey(const WORD key, bool ctrl, bool alt, bool shift, unsigned char keypad = 0,
 	WCHAR uc = 0);
 
-int FarDispatchAnsiApplicationProtocolCommand(const char *str);
-
 #if 0 //change to 1 to enable verbose I/O reports to stderr
 static void DbgPrintEscaped(const char *info, const char *s, size_t l)
 {
@@ -66,6 +64,21 @@ static void DbgPrintEscaped(const char *info, const char *s, size_t l)
 #endif
 
 int VTShell_Leader(char *const shell_argv[], const char *pty);
+
+std::string VTSanitizeHistcontrol()
+{
+	std::string hc_override;
+	const char *hc = getenv("HISTCONTROL");
+	if (!hc || (!strstr(hc, "ignorespace") && !strstr(hc, "ignoreboth"))) {
+		hc_override = "ignorespace";
+		if (hc && *hc) {
+			hc_override+= ':';
+			hc_override+= hc;
+		}
+		fprintf(stderr, "Override HISTCONTROL='%s'\n", hc_override.c_str());
+	}
+	return hc_override;
+}
 
 class VTShell : VTOutputReader::IProcessor, VTInputReader::IProcessor, IVTShell
 {
@@ -132,16 +145,7 @@ class VTShell : VTOutputReader::IProcessor, VTInputReader::IProcessor, IVTShell
 
 		// Will need to ensure that HISTCONTROL prevents adding to history commands that start by space
 		// to avoid shell history pollution by far2l's intermediate script execution commands
-		std::string hc_override;
-		const char *hc = getenv("HISTCONTROL");
-		if (!hc || (!strstr(hc, "ignorespace") && !strstr(hc, "ignoreboth"))) {
-			hc_override = "ignorespace";
-			if (hc && *hc) {
-				hc_override+= ':';
-				hc_override+= hc;
-			}
-			fprintf(stderr, "Override HISTCONTROL='%s'\n", hc_override.c_str());
-		}
+		const std::string &hc_override = VTSanitizeHistcontrol();
 
 		const BYTE col = FarColorToReal(COL_COMMANDLINEUSERSCREEN);
 		char colorfgbg[32];
