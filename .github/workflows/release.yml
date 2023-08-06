@@ -53,6 +53,7 @@ jobs:
         echo "" >> dependencies-smb-nfs-neon.txt
         echo "libsmbclient-dev" >> dependencies-smb-nfs-neon.txt
         echo "libnfs-dev" >> dependencies-smb-nfs-neon.txt
+        echo "libneon27-dev" >> dependencies-smb-nfs-neon.txt
         # echo "libneon*-dev" >> dependencies-smb-nfs-neon.txt
 
     - name: Dependencies
