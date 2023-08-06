@@ -22,17 +22,26 @@ jobs:
             dependencies: "-minimal"
             options: ""
           - name: "withWX"
-            dependencies: ""
+            dependencies: "-smb-nfs-neon"
             options: "-DUSEWX=yes"
           - name: "noWX"
-            dependencies: ""
+            dependencies: "-smb-nfs-neon"
             options: "-DUSEWX=no"
           - name: "withPYTHON"
-            dependencies: ""
+            dependencies: "-smb-nfs-neon"
             options: "-DPYTHON=yes"
 
     steps:
     - uses: actions/checkout@v3
+
+    - name: add dependencies
+      shell: bash
+      run: |
+        cp dependencies.txt dependencies-smb-nfs-neon.txt
+        echo "" >> dependencies-smb-nfs-neon.txt
+        echo "libsmbclient-dev" >> dependencies-smb-nfs-neon.txt
+        echo "libnfs-dev" >> dependencies-smb-nfs-neon.txt
+        echo "libneon*-dev" >> dependencies-smb-nfs-neon.txt
 
     - name: Dependencies
       run: sudo apt-get update ; sudo apt-get -y install $(cat dependencies${{ matrix.dependencies }}.txt)
