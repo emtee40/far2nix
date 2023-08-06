@@ -85,11 +85,11 @@ jobs:
       shell: bash
       run: tree
 
-    - name: Packing Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ matrix.name }}
-        path: ${{github.workspace}}/build/install
+#    - name: Packing Artifact
+#      uses: actions/upload-artifact@v3
+#      with:
+#        name: ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ matrix.name }}
+#        path: ${{github.workspace}}/build/install
 
     - name: Archive Release
       uses: deep-soft/zip-release@v2
