@@ -37,8 +37,9 @@ jobs:
     - name: set program version
       shell: bash
       run: |
+        set -x
         _version_=$(cat packaging/version)
-        echo "PROG_VERSION=v$_version" >> $GITHUB_ENV
+        echo "PROG_VERSION=v$_version_" >> $GITHUB_ENV
 
     - name: print program version
       shell: bash
