@@ -34,6 +34,17 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: set program version
+      shell: bash
+      run: |
+        _version_=$(cat packaging/version)
+        echo "PROG_VERSION=v$_version" >> $GITHUB_ENV
+
+    - name: print program version
+      shell: bash
+      run: |
+        echo "PROG_VERSION=${{ env.PROG_VERSION }}"
+
     - name: add dependencies
       shell: bash
       run: |
