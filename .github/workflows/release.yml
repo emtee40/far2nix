@@ -97,8 +97,10 @@ jobs:
         type: 'zip'
         filename: '${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ matrix.name }}.zip'
         directory: '${{github.workspace}}/build/install'
-        exclusions: '*.git* /*node_modules/* .editorconfig'
+        # exclusions: '*.git* /*node_modules/* .editorconfig'
+        exclusions: '*Bel.lng *Rus.lng *Cze.lng *Ger.lng *Hun.lng *Pol.lng *Spa.lng *Ukr.lng *bel.lng *rus.lng calcb.lng calcr.lng colorerb.lng colorerr.lng editorcomp_be.lng editorcomp_ru.lng isrcrus.lng'
         recursive_exclusions: '*Bel.lng *Rus.lng *Cze.lng *Ger.lng *Hun.lng *Pol.lng *Spa.lng *Ukr.lng *bel.lng *rus.lng calcb.lng calcr.lng colorerb.lng colorerr.lng editorcomp_be.lng editorcomp_ru.lng isrcrus.lng'
+        debug: yes
 
     - name: Publish Release
       continue-on-error: true
