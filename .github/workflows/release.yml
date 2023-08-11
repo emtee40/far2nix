@@ -32,7 +32,7 @@ jobs:
             options: "-DPYTHON=yes"
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: deep-soft/checkout@v3
 
     - name: set program version
       shell: bash
@@ -86,7 +86,7 @@ jobs:
       run: tree
 
 #    - name: Packing Artifact
-#      uses: actions/upload-artifact@v3
+#      uses: deep-soft/upload-artifact@v3
 #      with:
 #        name: ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ matrix.name }}
 #        path: ${{github.workspace}}/build/install
