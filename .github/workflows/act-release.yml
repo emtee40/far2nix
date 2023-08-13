@@ -45,12 +45,13 @@ jobs:
       shell: bash
       run: |
         set -x
-        if [ -f "/etc/os-release" ]; then
+        _os_release_file_="/etc/os-release"
+        if [ -f $_os_release_file_ ]; then
           echo "-1-"
-          cat "/etc/os-release"
+          cat "$_os_release_file_"
           echo "-2-"
-             _os_name_=$(cat "/etc/os-release" | grep "NAME="       | head -n 1 | awk -F = '{print $2}' | awk '{print $1}' | tr -d \")
-          _os_version_=$(cat "/etc/os-release" | grep "VERSION_ID=" | head -n 1 | awk -F = '{print $2}' | awk '{print $1}' | tr -d \")
+             _os_name_=$(cat $_os_release_file_ | grep         "ID=" | head -n 1 | awk -F = '{print $2}' | tr -d \")
+          _os_version_=$(cat $_os_release_file_ | grep "VERSION_ID=" | head -n 1 | awk -F = '{print $2}' | tr -d \")
           echo "OS_VERSION=$_os_name_-$_os_version_" >> $GITHUB_ENV
         fi
 
