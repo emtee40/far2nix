@@ -93,7 +93,10 @@ jobs:
     - name: Build package
       working-directory: ${{github.workspace}}/build
       shell: bash
-      run: cmake --build . --target package
+      run: |
+        cmake --build . --target package
+        mv ${{ env.PROG_NAME }}*.deb    ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ matrix.name }}.deb
+        mv ${{ env.PROG_NAME }}*.tar.gz ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ matrix.name }}.tar.gz
 
     - name: File Tree
       working-directory: ${{github.workspace}}/build
