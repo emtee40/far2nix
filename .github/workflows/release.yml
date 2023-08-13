@@ -1,8 +1,18 @@
 name: Release
 
 on:
-  workflow_dispatch:
 #  push
+  workflow_dispatch:
+    inputs:
+      make_archive_all:
+        description: 'Archive ALL'
+        type: boolean
+        default: false
+      run_tests:
+      # Execute tests defined by the CMake configuration.
+        description: 'run tests'
+        type: boolean
+        default: false
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -119,6 +129,7 @@ jobs:
           ${{github.workspace}}/build/${{ env.PROG_NAME }}*.tar.gz
 
     - name: Archive Release - All
+      if: ${{ inputs.make_archive_all }}
       uses: deep-soft/zip-release@v2
       with:
         type: 'zip'
@@ -131,6 +142,7 @@ jobs:
         debug: yes
 
     - name: Publish Release - All
+      if: ${{ inputs.make_archive_all }}
       continue-on-error: true
       uses: deep-soft/action-gh-release@v1
       with:
@@ -140,6 +152,7 @@ jobs:
           ${{ env.ZIP_RELEASE_ARCHIVE_ALL }}
 
     - name: Test
+      if: ${{ inputs.run_tests }}
       working-directory: ${{github.workspace}}/build
       shell: bash
       # Execute tests defined by the CMake configuration.  
