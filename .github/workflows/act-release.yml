@@ -1,4 +1,4 @@
-# 2023-08-13 22:50
+# 2023-08-13 23:00
 name: act - Release
 
 on:
@@ -23,20 +23,21 @@ env:
 
 jobs:
   build:
-    name: ${{ matrix.job.os }} (${{ matrix.job.target }})
+    name: ${{ matrix.job.name }} (${{ matrix.job.os }})
     runs-on: ${{ matrix.job.os }}
     strategy:
       fail-fast: false
       matrix:
         job:
-          - { os: ubuntu-20.04 , name: "minimal"    , dependencies: "-minimal"     , options: ""             }
-          - { os: ubuntu-20.04 , name: "withWX"     , dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
-          - { os: ubuntu-20.04 , name: "noWX"       , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
-          - { os: ubuntu-20.04 , name: "withPYTHON" , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
-          - { os: ubuntu-latest, name: "minimal"    , dependencies: "-minimal"     , options: ""             }
-          - { os: ubuntu-latest, name: "withWX"     , dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
-          - { os: ubuntu-latest, name: "noWX"       , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
-          - { os: ubuntu-latest, name: "withPYTHON" , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
+          - { name: "minimal"    , os: ubuntu-20.04 , dependencies: "-minimal"     , options: ""             }
+          - { name: "withWX"     , os: ubuntu-20.04 , dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
+          - { name: "noWX"       , os: ubuntu-20.04 , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
+          - { name: "withPYTHON" , os: ubuntu-20.04 , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
+          - { name: "minimal"    , os: ubuntu-latest, dependencies: "-minimal"     , options: ""             }
+          - { name: "withWX"     , os: ubuntu-latest, dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
+          - { name: "noWX"       , os: ubuntu-latest, dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
+          - { name: "withPYTHON" , os: ubuntu-latest, dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
+
     steps:
     - uses: deep-soft/checkout@v3
 
@@ -63,7 +64,7 @@ jobs:
         # echo "libneon*-dev" >> dependencies-smb-nfs-neon.txt
 
     - name: Dependencies
-      run: sudo apt-get update ; sudo apt-get -y install $(cat dependencies${{ matrix.dependencies }}.txt)
+      run: sudo apt-get update ; sudo apt-get -y install $(cat dependencies${{ matrix.job.dependencies }}.txt)
 
     - name: Create Build Environment
       # Some projects don't allow in-source building, so create a separate build directory
@@ -78,7 +79,7 @@ jobs:
       # Note the current convention is to use the -S and -B options here to specify source 
       # and build directories, but this is only available with CMake 3.13 and higher.  
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${{ matrix.options }}
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${{ matrix.job.options }}
 
     - name: Build
       working-directory: ${{github.workspace}}/build
@@ -91,8 +92,8 @@ jobs:
       shell: bash
       run: |
         cmake --build . --target package
-        mv ${{ env.PROG_NAME }}*.deb    ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ matrix.name }}.deb
-        mv ${{ env.PROG_NAME }}*.tar.gz ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ matrix.name }}.tar.gz
+        mv ${{ env.PROG_NAME }}*.deb    ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ matrix.job.name }}.deb
+        mv ${{ env.PROG_NAME }}*.tar.gz ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ matrix.job.name }}.tar.gz
 
     - name: File Tree
       working-directory: ${{github.workspace}}/build
@@ -102,14 +103,14 @@ jobs:
 #    - name: Packing Artifact
 #      uses: deep-soft/upload-artifact@v3
 #      with:
-#        name: ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ matrix.name }}
+#        name: ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ matrix.job.name }}
 #        path: ${{github.workspace}}/build/install
 
     - name: Archive Release
       uses: deep-soft/zip-release@v2
       with:
         type: 'zip'
-        filename: '${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ matrix.name }}.zip'
+        filename: '${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ matrix.job.name }}.zip'
         directory: '${{github.workspace}}/build/install'
         # exclusions: '*.git* /*node_modules/* .editorconfig'
         exclusions: '*Bel.lng *Rus.lng *Cze.lng *Ger.lng *Hun.lng *Pol.lng *Spa.lng *Ukr.lng *bel.lng *rus.lng *calcb.lng *calcr.lng *colorerb.lng *colorerr.lng *editorcomp_be.lng *editorcomp_ru.lng *isrcrus.lng'
@@ -132,7 +133,7 @@ jobs:
       uses: deep-soft/zip-release@v2
       with:
         type: 'zip'
-        filename: '${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ matrix.name }}-ALL.zip'
+        filename: '${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ matrix.job.name }}-ALL.zip'
         directory: '${{github.workspace}}'
         # exclusions: '*.git* /*node_modules/* .editorconfig'
         exclusions: ''
