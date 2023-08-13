@@ -80,6 +80,11 @@ jobs:
       # Execute the build.  You can specify a specific target with "--target <NAME>"
       run: cmake --build . --config $BUILD_TYPE
 
+    - name: Build package
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: cmake --build . --target package
+
     - name: File Tree
       working-directory: ${{github.workspace}}/build
       shell: bash
@@ -110,6 +115,8 @@ jobs:
         tag_name: ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}
         files: |
           ${{ env.ZIP_RELEASE_ARCHIVE }}
+          ${{github.workspace}}/build/${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}*.deb
+          ${{github.workspace}}/build/${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}*.tar.gz
 
     - name: Test
       working-directory: ${{github.workspace}}/build
