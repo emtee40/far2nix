@@ -1,4 +1,4 @@
-# 2023-08-13 23:20
+# 2023-08-13 23:30
 name: act - Release
 
 on:
@@ -46,8 +46,8 @@ jobs:
       run: |
         set -x
         if [ -f "/etc/os-release" ]; then
-             _os_name_=$(cat "/etc/os-release" | grep "NAME="    | awk -F =   '{print $2}')
-          _os_version_=$(cat "/etc/os-release" | grep "VERSION=" | awk -F " " '{print $1}')
+             _os_name_=$(cat "/etc/os-release" | grep "NAME="    | head -n 1 | awk -F =   '{print $2}' | tr -d ")
+          _os_version_=$(cat "/etc/os-release" | grep "VERSION=" | head -n 1 | awk        '{print $1}' | tr -d ")
           echo "OS_VERSION=$_os_name_-$_os_version_" >> $GITHUB_ENV
         fi
 
