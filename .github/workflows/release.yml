@@ -115,8 +115,29 @@ jobs:
         tag_name: ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}
         files: |
           ${{ env.ZIP_RELEASE_ARCHIVE }}
-          ${{github.workspace}}/build/${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}*.deb
-          ${{github.workspace}}/build/${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}*.tar.gz
+          ${{github.workspace}}/build/${{ env.PROG_NAME }}*.deb
+          ${{github.workspace}}/build/${{ env.PROG_NAME }}*.tar.gz
+
+    - name: Archive Release - All
+      uses: deep-soft/zip-release@v2
+      with:
+        type: 'zip'
+        filename: '${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ matrix.name }}-ALL.zip'
+        directory: '${{github.workspace}}'
+        # exclusions: '*.git* /*node_modules/* .editorconfig'
+        exclusions: ''
+        recursive_exclusions: ''
+        env_variable: ZIP_RELEASE_ARCHIVE_ALL
+        debug: yes
+
+    - name: Publish Release - All
+      continue-on-error: true
+      uses: deep-soft/action-gh-release@v1
+      with:
+        draft: true
+        tag_name: ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-ALL
+        files: |
+          ${{ env.ZIP_RELEASE_ARCHIVE_ALL }}
 
     - name: Test
       working-directory: ${{github.workspace}}/build
