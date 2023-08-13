@@ -41,6 +41,21 @@ jobs:
     steps:
     - uses: deep-soft/checkout@v3
 
+    - name: get os version
+      shell: bash
+      run: |
+        set -x
+        if [ -f /etc/os-release]; then
+          _os_name    = $(cat /etc/os-release | grep "NAME="    | awk -F =   '{print $2}')
+          _os_version = $(cat /etc/os-release | grep "VERSION=" | awk -F " " '{print $1}')
+          echo "OS_VERSION=$_os_name-$_os_version_" >> $GITHUB_ENV
+        fi
+
+    - name: print os version
+      shell: bash
+      run: |
+        echo "OS_VERSION=${{ env.OS_VERSION }}"
+
     - name: set program version
       shell: bash
       run: |
@@ -92,8 +107,8 @@ jobs:
       shell: bash
       run: |
         cmake --build . --target package
-        mv ${{ env.PROG_NAME }}*.deb    ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ matrix.job.name }}.deb
-        mv ${{ env.PROG_NAME }}*.tar.gz ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ matrix.job.name }}.tar.gz
+        mv ${{ env.PROG_NAME }}*.deb    ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ env.OS_VERSION }}-${{ matrix.job.name }}.deb
+        mv ${{ env.PROG_NAME }}*.tar.gz ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ env.OS_VERSION }}-${{ matrix.job.name }}.tar.gz
 
     - name: File Tree
       working-directory: ${{github.workspace}}/build
@@ -110,7 +125,7 @@ jobs:
       uses: deep-soft/zip-release@v2
       with:
         type: 'zip'
-        filename: '${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ matrix.job.name }}.zip'
+        filename: '${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ env.OS_VERSION }}-${{ matrix.job.name }}.zip'
         directory: '${{github.workspace}}/build/install'
         # exclusions: '*.git* /*node_modules/* .editorconfig'
         exclusions: '*Bel.lng *Rus.lng *Cze.lng *Ger.lng *Hun.lng *Pol.lng *Spa.lng *Ukr.lng *bel.lng *rus.lng *calcb.lng *calcr.lng *colorerb.lng *colorerr.lng *editorcomp_be.lng *editorcomp_ru.lng *isrcrus.lng'
@@ -133,7 +148,7 @@ jobs:
       uses: deep-soft/zip-release@v2
       with:
         type: 'zip'
-        filename: '${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ matrix.job.name }}-ALL.zip'
+        filename: '${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ env.OS_VERSION }}-${{ matrix.job.name }}-ALL.zip'
         directory: '${{github.workspace}}'
         # exclusions: '*.git* /*node_modules/* .editorconfig'
         exclusions: ''
