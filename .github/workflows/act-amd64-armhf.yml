@@ -153,7 +153,7 @@ jobs:
         cat dependencies-smb-nfs-neon.txt
         echo "...dependencies-smb-nfs-neon.txt - end" 
         # sudo apt-get update
-        sudo dpkg --configure -a -y
+        # sudo dpkg --configure -a
         sudo apt-get -y -f install $(cat dependencies${{ matrix.job.dependencies }}.txt)
 
     - name: Create Build Environment
