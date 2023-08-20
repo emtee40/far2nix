@@ -29,18 +29,18 @@ jobs:
       matrix:
         gcc: [ 12 ]
         job:
-          - { arch: amd64,  name: "minimal"   , os: ubuntu-20.04 , gcc: x86_64-linux-gnu   , dependencies: "-minimal"     , options: ""            , needs_ports: "0" }
-          - { arch: amd64,  name: "withWX"    , os: ubuntu-20.04 , gcc: x86_64-linux-gnu   , dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes" , needs_ports: "0" }
-          - { arch: amd64,  name: "noWX"      , os: ubuntu-20.04 , gcc: x86_64-linux-gnu   , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"  , needs_ports: "0" }
-          - { arch: amd64,  name: "withPYTHON", os: ubuntu-20.04 , gcc: x86_64-linux-gnu   , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes", needs_ports: "0" }
+#          - { arch: amd64,  name: "minimal"   , os: ubuntu-20.04 , gcc: x86_64-linux-gnu   , dependencies: "-minimal"     , options: ""            , needs_ports: "0" }
+#          - { arch: amd64,  name: "withWX"    , os: ubuntu-20.04 , gcc: x86_64-linux-gnu   , dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes" , needs_ports: "0" }
+#          - { arch: amd64,  name: "noWX"      , os: ubuntu-20.04 , gcc: x86_64-linux-gnu   , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"  , needs_ports: "0" }
+#          - { arch: amd64,  name: "withPYTHON", os: ubuntu-20.04 , gcc: x86_64-linux-gnu   , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes", needs_ports: "0" }
           - { arch: amd64,  name: "minimal"   , os: ubuntu-latest, gcc: x86_64-linux-gnu   , dependencies: "-minimal"     , options: ""            , needs_ports: "0" }
           - { arch: amd64,  name: "withWX"    , os: ubuntu-latest, gcc: x86_64-linux-gnu   , dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes" , needs_ports: "0" }
           - { arch: amd64,  name: "noWX"      , os: ubuntu-latest, gcc: x86_64-linux-gnu   , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"  , needs_ports: "0" }
           - { arch: amd64,  name: "withPYTHON", os: ubuntu-latest, gcc: x86_64-linux-gnu   , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes", needs_ports: "0" }
-          - { arch: armhf,  name: "minimal"   , os: ubuntu-20.04 , gcc: arm-linux-gnueabihf, dependencies: "-minimal"     , options: ""            , needs_ports: "1" }
-          - { arch: armhf,  name: "withWX"    , os: ubuntu-20.04 , gcc: arm-linux-gnueabihf, dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes" , needs_ports: "1" }
-          - { arch: armhf,  name: "noWX"      , os: ubuntu-20.04 , gcc: arm-linux-gnueabihf, dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"  , needs_ports: "1" }
-          - { arch: armhf,  name: "withPYTHON", os: ubuntu-20.04 , gcc: arm-linux-gnueabihf, dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes", needs_ports: "1" }
+#          - { arch: armhf,  name: "minimal"   , os: ubuntu-20.04 , gcc: arm-linux-gnueabihf, dependencies: "-minimal"     , options: ""            , needs_ports: "1" }
+#          - { arch: armhf,  name: "withWX"    , os: ubuntu-20.04 , gcc: arm-linux-gnueabihf, dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes" , needs_ports: "1" }
+#          - { arch: armhf,  name: "noWX"      , os: ubuntu-20.04 , gcc: arm-linux-gnueabihf, dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"  , needs_ports: "1" }
+#          - { arch: armhf,  name: "withPYTHON", os: ubuntu-20.04 , gcc: arm-linux-gnueabihf, dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes", needs_ports: "1" }
           - { arch: armhf,  name: "minimal"   , os: ubuntu-latest, gcc: arm-linux-gnueabihf, dependencies: "-minimal"     , options: ""            , needs_ports: "1" }
           - { arch: armhf,  name: "withWX"    , os: ubuntu-latest, gcc: arm-linux-gnueabihf, dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes" , needs_ports: "1" }
           - { arch: armhf,  name: "noWX"      , os: ubuntu-latest, gcc: arm-linux-gnueabihf, dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"  , needs_ports: "1" }
@@ -108,12 +108,10 @@ jobs:
         
         # This limits apt to only looking or amd64 and i386 from Azure, see https://github.com/actions/virtual-environments/issues/1961
         sudo sed -i'' -E 's/^deb http:\/\/(azure.jobive|security).ubuntu.com/deb [arch=amd64,i386] http:\/\/\1.ubuntu.com/' /etc/apt/sources.list;
+        sudo dpkg --add-architecture "${{ matrix.job.arch }}";
         sudo apt install ca-certificates -y
         sudo apt-get update;
-        sudo dpkg --add-architecture "${{ matrix.job.arch }}";
-        #        sudo apt-get update;
-        #        sudo apt-get install -y \
-        #          "${GPP_PACKAGE}" \
+        sudo apt-get install -y "${GPP_PACKAGE}"
         #          "libx11-dev:${{ matrix.job.arch }}" \
         #          "libwayland-dev:${{ matrix.job.arch }}" \
         #          "wayland-protocols:${{ matrix.job.arch }}" \
@@ -126,8 +124,8 @@ jobs:
         #    - name: add dependencies
         #      shell: bash
         #       run: |
-        echo "" >> dependencies.txt;
-        echo "${GPP_PACKAGE}" >> dependencies.txt;
+        # echo "" >> dependencies.txt;
+        # echo "${GPP_PACKAGE}" >> dependencies.txt;
         cp dependencies.txt dependencies-smb-nfs-neon.txt;
         echo "" >> dependencies-smb-nfs-neon.txt;
         echo "libsmbclient-dev" >> dependencies-smb-nfs-neon.txt;
