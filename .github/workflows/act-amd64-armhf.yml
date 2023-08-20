@@ -137,12 +137,12 @@ jobs:
         echo "libnfs-dev" >> dependencies-smb-nfs-neon.txt;
         echo "libneon27-dev" >> dependencies-smb-nfs-neon.txt;
         # echo "libneon*-dev" >> dependencies-smb-nfs-neon.txt;
-        cat dependencies.txt              | while read line; do if [ ${line} != '' ]; then echo ${line}${{ matrix.job.arch }};  done
-        cat dependencies-minimal.txt      | while read line; do if [ ${line} != '' ]; then echo ${line}${{ matrix.job.arch }};  done
-        cat dependencies-smb-nfs-neon.txt | while read line; do if [ ${line} != '' ]; then echo ${line}${{ matrix.job.arch }};  done
         #sed -e 's/$/:${{ matrix.job.arch }}/' -ibak dependencies.txt
         #sed -e 's/$/:${{ matrix.job.arch }}/' -ibak dependencies-minimal.txt
         #sed -e 's/$/:${{ matrix.job.arch }}/' -ibak dependencies-smb-nfs-neon.txt
+        sed 's/^ *//; s/ *$//; /^$/d; /^\s*$/d' -i dependencies.txt
+        sed 's/^ *//; s/ *$//; /^$/d; /^\s*$/d' -i dependencies-minimal.txt
+        sed 's/^ *//; s/ *$//; /^$/d; /^\s*$/d' -i dependencies-smb-nfs-neon.txt
         #
         echo "...dependencies.txt - begin" 
         cat dependencies.txt
