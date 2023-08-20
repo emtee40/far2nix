@@ -80,8 +80,8 @@ jobs:
       shell: bash
       run: |
         echo "PROG_VERSION=${{ env.PROG_VERSION }}"
-    
-    - name: Install gcc for arch ${{ matrix.job.arch }}
+
+    - name: Install gcc for arch
       shell: bash
       run: |
         # set -x
