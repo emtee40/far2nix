@@ -121,6 +121,11 @@ jobs:
         #          "-DCMAKE_CXX_COMPILER=${{ matrix.job.gcc }}-g++-${{ matrix.gcc }}" \
         #          "-DCMAKE_C_COMPILER=${{ matrix.job.gcc }}-gcc-${{ matrix.gcc }}" \
         #          "-DCMAKE_BUILD_TYPE=Release";
+
+    - name: Dependencies
+      shell: bash
+      run: |
+        set -x
         #    - name: add dependencies
         #      shell: bash
         #       run: |
@@ -132,9 +137,9 @@ jobs:
         echo "libnfs-dev" >> dependencies-smb-nfs-neon.txt;
         echo "libneon27-dev" >> dependencies-smb-nfs-neon.txt;
         # echo "libneon*-dev" >> dependencies-smb-nfs-neon.txt;
-        sed -e 's/\$/:${{ matrix.job.arch }}/' -ibak dependencies.txt
-        sed -e 's/\$/:${{ matrix.job.arch }}/' -ibak dependencies-minimal.txt
-        sed -e 's/\$/:${{ matrix.job.arch }}/' -ibak dependencies-smb-nfs-neon.txt
+        sed -e 's/$/:${{ matrix.job.arch }}/' -ibak dependencies.txt
+        sed -e 's/$/:${{ matrix.job.arch }}/' -ibak dependencies-minimal.txt
+        sed -e 's/$/:${{ matrix.job.arch }}/' -ibak dependencies-smb-nfs-neon.txt
         #
         echo "...dependencies.txt - begin" 
         cat dependencies.txt
@@ -142,10 +147,6 @@ jobs:
         echo "...dependencies-smb-nfs-neon.txt - begin" 
         cat dependencies-smb-nfs-neon.txt
         echo "...dependencies-smb-nfs-neon.txt - end" 
-
-    - name: Dependencies
-      shell: bash
-      run: |
         # sudo apt-get update
         sudo apt-get -y install $(cat dependencies${{ matrix.job.dependencies }}.txt)
 
