@@ -84,6 +84,7 @@ jobs:
       shell: bash
       run: |
         sudo mv /etc/apt/apt-mirrors.txt /etc/apt/apt-mirrors.txt-disabled
+        sudo touch /etc/apt/apt-mirrors.txt
 
     - name: /etc/apt/sources.list 01
       uses: deep-soft/upload-artifact@v3
@@ -198,6 +199,7 @@ jobs:
     - name: restore /etc/apt/apt-mirrors.txt
       shell: bash
       run: |
+        sudo rm /etc/apt/apt-mirrors.txt
         sudo mv /etc/apt/apt-mirrors.txt-disabled /etc/apt/apt-mirrors.txt
 
     - name: Create Build Environment
