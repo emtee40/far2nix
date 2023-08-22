@@ -88,6 +88,12 @@ jobs:
       run: |
         echo "PROG_VERSION=${{ env.PROG_VERSION }}";
 
+    - name: /etc/apt/sources.list 01
+      uses: deep-soft/upload-artifact@v3
+      with:
+        name: etc-apt-sources-list-01-${{ matrix.job.arch }}
+        path: /etc/apt/sources.list
+
     - name: Install gcc for arch ${{ matrix.job.arch }}
       shell: bash
       run: |
@@ -113,7 +119,16 @@ jobs:
           cat /etc/apt/sources.list;
           echo "END: cat /etc/apt/sources.list";
         fi
-        
+
+    - name: /etc/apt/sources.list 02
+      uses: deep-soft/upload-artifact@v3
+      with:
+        name: etc-apt-sources-list-02-${{ matrix.job.arch }}
+        path: /etc/apt/sources.list
+
+    - name: Install gcc for arch ${{ matrix.job.arch }} - part 2
+      shell: bash
+      run: |
         # This limits apt to only looking for amd64 and i386 from Azure, see https://github.com/actions/virtual-environments/issues/1961
         sudo sed -i'' -E 's/^deb http:\/\/(azure.jobive|security).ubuntu.com/deb [arch=amd64,i386] http:\/\/\1.ubuntu.com/' /etc/apt/sources.list;
         sudo dpkg --add-architecture "${{ matrix.job.arch }}";
@@ -129,6 +144,12 @@ jobs:
         #          "-DCMAKE_CXX_COMPILER=${{ matrix.job.gcc }}-g++-${{ matrix.gcc }}" \
         #          "-DCMAKE_C_COMPILER=${{ matrix.job.gcc }}-gcc-${{ matrix.gcc }}" \
         #          "-DCMAKE_BUILD_TYPE=Release";
+
+    - name: /etc/apt/sources.list 03
+      uses: deep-soft/upload-artifact@v3
+      with:
+        name: etc-apt-sources-list-03-${{ matrix.job.arch }}
+        path: /etc/apt/sources.list
 
     - name: Dependencies
       shell: bash
