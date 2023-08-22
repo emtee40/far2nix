@@ -169,6 +169,8 @@ jobs:
         #       run: |
         # echo "" >> dependencies.txt;
         # echo "${GPP_PACKAGE}" >> dependencies.txt;
+        echo "" >> dependencies.txt;
+        echo "libwxgtk3.2-gtk3-dev" >> dependencies.txt;
         cp dependencies.txt dependencies-smb-nfs-neon.txt;
         echo "" >> dependencies-smb-nfs-neon.txt;
         echo "libsmbclient-dev" >> dependencies-smb-nfs-neon.txt;
