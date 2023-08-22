@@ -140,7 +140,6 @@ jobs:
         sudo dpkg --add-architecture "${{ matrix.job.arch }}";
         sudo apt install ca-certificates -y && true
         sudo apt-get update && true
-        sudo apt-get install -y libtiff5:armhf
         sudo apt-get install -y "${GPP_PACKAGE}" && true
         #          "libx11-dev:${{ matrix.job.arch }}" \
         #          "libwayland-dev:${{ matrix.job.arch }}" \
@@ -169,9 +168,9 @@ jobs:
         #      shell: bash
         #       run: |
         # echo "" >> dependencies.txt;
+        # echo "libtiff5" >> dependencies.txt;
+        # echo "" >> dependencies.txt;
         # echo "${GPP_PACKAGE}" >> dependencies.txt;
-        echo "" >> dependencies.txt;
-        echo "libtiff5" >> dependencies.txt;
         cp dependencies.txt dependencies-smb-nfs-neon.txt;
         echo "" >> dependencies-smb-nfs-neon.txt;
         echo "libsmbclient-dev" >> dependencies-smb-nfs-neon.txt;
