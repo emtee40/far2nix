@@ -24,6 +24,7 @@ jobs:
   build:
     name: ${{ matrix.job.arch }} ${{ matrix.job.os }} (${{ matrix.job.name }})
     runs-on: ${{ matrix.job.os }}
+    container: ubuntu:21.04
     strategy:
       fail-fast: false
       matrix:
@@ -41,10 +42,10 @@ jobs:
           - { arch: armhf,  name: "withWX"    , os: ubuntu-20.04 , gcc: arm-linux-gnueabihf, dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes" , needs_ports: "1" }
           - { arch: armhf,  name: "noWX"      , os: ubuntu-20.04 , gcc: arm-linux-gnueabihf, dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"  , needs_ports: "1" }
           - { arch: armhf,  name: "withPYTHON", os: ubuntu-20.04 , gcc: arm-linux-gnueabihf, dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes", needs_ports: "1" }
-          - { arch: armhf,  name: "minimal"   , os: ubuntu-21.04 , gcc: arm-linux-gnueabihf, dependencies: "-minimal"     , options: ""            , needs_ports: "1" }
-          - { arch: armhf,  name: "withWX"    , os: ubuntu-21.04 , gcc: arm-linux-gnueabihf, dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes" , needs_ports: "1" }
-          - { arch: armhf,  name: "noWX"      , os: ubuntu-21.04 , gcc: arm-linux-gnueabihf, dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"  , needs_ports: "1" }
-          - { arch: armhf,  name: "withPYTHON", os: ubuntu-21.04 , gcc: arm-linux-gnueabihf, dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes", needs_ports: "1" }
+#          - { arch: armhf,  name: "minimal"   , os: ubuntu-21.04 , gcc: arm-linux-gnueabihf, dependencies: "-minimal"     , options: ""            , needs_ports: "1" }
+#          - { arch: armhf,  name: "withWX"    , os: ubuntu-21.04 , gcc: arm-linux-gnueabihf, dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes" , needs_ports: "1" }
+#          - { arch: armhf,  name: "noWX"      , os: ubuntu-21.04 , gcc: arm-linux-gnueabihf, dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"  , needs_ports: "1" }
+#          - { arch: armhf,  name: "withPYTHON", os: ubuntu-21.04 , gcc: arm-linux-gnueabihf, dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes", needs_ports: "1" }
 #          - { arch: armhf,  name: "minimal"   , os: ubuntu-latest, gcc: arm-linux-gnueabihf, dependencies: "-minimal"     , options: ""            , needs_ports: "1" }
 #          - { arch: armhf,  name: "withWX"    , os: ubuntu-latest, gcc: arm-linux-gnueabihf, dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes" , needs_ports: "1" }
 #          - { arch: armhf,  name: "noWX"      , os: ubuntu-latest, gcc: arm-linux-gnueabihf, dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"  , needs_ports: "1" }
