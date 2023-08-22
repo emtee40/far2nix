@@ -8,6 +8,14 @@ on:
         description: 'Archive ALL'
         type: boolean
         default: false
+      build_amd64:
+        description: 'build amd64'
+        type: boolean
+        default: true
+      build_armhf:
+        description: 'build armhf'
+        type: boolean
+        default: true
       run_tests:
       # Execute tests defined by the CMake configuration.
         description: 'run tests'
