@@ -169,6 +169,8 @@ jobs:
         #       run: |
         # echo "" >> dependencies.txt;
         # echo "${GPP_PACKAGE}" >> dependencies.txt;
+        echo "" >> dependencies.txt;
+        echo "libtiff5" >> dependencies.txt;
         cp dependencies.txt dependencies-smb-nfs-neon.txt;
         echo "" >> dependencies-smb-nfs-neon.txt;
         echo "libsmbclient-dev" >> dependencies-smb-nfs-neon.txt;
@@ -194,8 +196,8 @@ jobs:
         # sudo dpkg --configure -a
         # sudo apt -y install $(cat dependencies${{ matrix.job.dependencies }}.txt)
         # sudo dpkg --configure -a
-        sudo apt install aptitude
-        sudo aptitude -y install $(cat dependencies${{ matrix.job.dependencies }}.txt)
+        # sudo apt install aptitude
+        # sudo aptitude -y install $(cat dependencies${{ matrix.job.dependencies }}.txt)
         sudo apt -y install $(cat dependencies${{ matrix.job.dependencies }}.txt)
 
     - name: restore /etc/apt/apt-mirrors.txt
