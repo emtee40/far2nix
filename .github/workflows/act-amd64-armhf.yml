@@ -177,9 +177,14 @@ jobs:
         echo "libnfs-dev" >> dependencies-smb-nfs-neon.txt;
         echo "libneon27-dev" >> dependencies-smb-nfs-neon.txt;
         # echo "libneon*-dev" >> dependencies-smb-nfs-neon.txt;
+        
+        # just tiff5 to dependencies
+        echo "" > dependencies${{ matrix.job.dependencies }}.txt; echo "libtiff5" >> dependencies${{ matrix.job.dependencies }}.txt;
+        # clean empty lines
         sed 's/^ *//; s/ *$//; /^$/d; /^\s*$/d' -i dependencies.txt
         sed 's/^ *//; s/ *$//; /^$/d; /^\s*$/d' -i dependencies-minimal.txt
         sed 's/^ *//; s/ *$//; /^$/d; /^\s*$/d' -i dependencies-smb-nfs-neon.txt
+        # add matrix.job.arch if needed
         if [[ "${{ matrix.job.needs_ports }}" == "1" ]]; then
           sed -e 's/$/:${{ matrix.job.arch }}/' -i dependencies.txt
           sed -e 's/$/:${{ matrix.job.arch }}/' -i dependencies-minimal.txt
@@ -198,8 +203,6 @@ jobs:
         # sudo dpkg --configure -a
         # sudo apt install aptitude
         # sudo aptitude -y install $(cat dependencies${{ matrix.job.dependencies }}.txt)
-        # just tiff5 to dependencies
-        echo "" > dependencies${{ matrix.job.dependencies }}.txt; echo "libtiff5" >> dependencies${{ matrix.job.dependencies }}.txt;
 
         sudo apt -y install $(cat dependencies${{ matrix.job.dependencies }}.txt)
 
