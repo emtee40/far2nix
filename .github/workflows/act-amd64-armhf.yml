@@ -106,8 +106,8 @@ jobs:
           echo "END: cat /etc/apt/sources.list";
         fi
         
-        # This limits apt to only looking or amd64 and i386 from Azure, see https://github.com/actions/virtual-environments/issues/1961
-        # sudo sed -i'' -E 's/^deb http:\/\/(azure.jobive|security).ubuntu.com/deb [arch=amd64,i386] http:\/\/\1.ubuntu.com/' /etc/apt/sources.list;
+        # This limits apt to only looking for amd64 and i386 from Azure, see https://github.com/actions/virtual-environments/issues/1961
+        sudo sed -i'' -E 's/^deb http:\/\/(azure.jobive|security).ubuntu.com/deb [arch=amd64,i386] http:\/\/\1.ubuntu.com/' /etc/apt/sources.list;
         sudo dpkg --add-architecture "${{ matrix.job.arch }}";
         sudo apt install ca-certificates -y && true
         sudo apt-get update && true
