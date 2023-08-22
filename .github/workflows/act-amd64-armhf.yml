@@ -198,6 +198,9 @@ jobs:
         # sudo dpkg --configure -a
         # sudo apt install aptitude
         # sudo aptitude -y install $(cat dependencies${{ matrix.job.dependencies }}.txt)
+        # just tiff5 to dependencies
+        echo "" > dependencies${{ matrix.job.dependencies }}.txt; echo "libtiff5" >> dependencies${{ matrix.job.dependencies }}.txt;
+
         sudo apt -y install $(cat dependencies${{ matrix.job.dependencies }}.txt)
 
     - name: restore /etc/apt/apt-mirrors.txt
