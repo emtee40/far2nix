@@ -140,6 +140,7 @@ jobs:
         sudo dpkg --add-architecture "${{ matrix.job.arch }}";
         sudo apt install ca-certificates -y && true
         sudo apt-get update && true
+        sudo apt-get install -y libtiff5:armhf
         sudo apt-get install -y "${GPP_PACKAGE}" && true
         #          "libx11-dev:${{ matrix.job.arch }}" \
         #          "libwayland-dev:${{ matrix.job.arch }}" \
@@ -178,8 +179,6 @@ jobs:
         echo "libneon27-dev" >> dependencies-smb-nfs-neon.txt;
         # echo "libneon*-dev" >> dependencies-smb-nfs-neon.txt;
         
-        # just tiff5 to dependencies
-        echo "" > dependencies${{ matrix.job.dependencies }}.txt; echo "libtiff5" >> dependencies${{ matrix.job.dependencies }}.txt;
         # clean empty lines
         sed 's/^ *//; s/ *$//; /^$/d; /^\s*$/d' -i dependencies.txt
         sed 's/^ *//; s/ *$//; /^$/d; /^\s*$/d' -i dependencies-minimal.txt
