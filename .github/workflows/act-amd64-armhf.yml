@@ -84,7 +84,8 @@ jobs:
       shell: bash
       run: |
         sudo mv /etc/apt/apt-mirrors.txt /etc/apt/apt-mirrors.txt-disabled
-        sudo echo "http://archive.ubuntu.com/ubuntu/  priority:1" | sudo tee -a /etc/apt/apt-mirrors.txt;
+        sudo echo "http://archive.ubuntu.com/ubuntu/" | sudo tee -a /etc/apt/apt-mirrors.txt;
+        sudo echo "" | sudo tee -a /etc/apt/apt-mirrors.txt;
 
     - name: /etc/apt/sources.list 01
       uses: deep-soft/upload-artifact@v3
