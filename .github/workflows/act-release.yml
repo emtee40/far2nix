@@ -50,8 +50,8 @@ jobs:
           echo "-1-"
           cat "$_os_release_file_"
           echo "-2-"
-             _os_name_=$(cat $_os_release_file_ | grep         "ID=" | head -n 1 | awk -F = '{print $2}' | tr -d \")
-          _os_version_=$(cat $_os_release_file_ | grep "VERSION_ID=" | head -n 1 | awk -F = '{print $2}' | tr -d \")
+             _os_name_=$(cat $_os_release_file_ | grep         "^ID=" | head -n 1 | awk -F = '{print $2}' | tr -d \")
+          _os_version_=$(cat $_os_release_file_ | grep "^VERSION_ID=" | head -n 1 | awk -F = '{print $2}' | tr -d \")
           echo "OS_VERSION=$_os_name_-$_os_version_" >> $GITHUB_ENV
         fi
 
