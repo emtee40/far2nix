@@ -290,7 +290,7 @@ bool dlgSaveFileAs(FARString &strFileName, int &TextFormat, UINT &codepage, bool
 
 const FileEditor *FileEditor::CurrentEditor = nullptr;
 
-FileEditor::FileEditor(const wchar_t *Name, UINT codepage, DWORD InitFlags, int StartLine, int StartChar,
+FileEditor::FileEditor(FileHolderPtr NewFileHolder, UINT codepage, DWORD InitFlags, int StartLine, int StartChar,
 		const wchar_t *PluginData, int OpenModeExstFile)
 	:
 	BadConversion(false), SaveAsTextFormat(0)
@@ -298,10 +298,10 @@ FileEditor::FileEditor(const wchar_t *Name, UINT codepage, DWORD InitFlags, int 
 	ScreenObject::SetPosition(0, 0, ScrX, ScrY);
 	Flags.Set(InitFlags);
 	Flags.Set(FFILEEDIT_FULLSCREEN);
-	Init(Name, codepage, nullptr, InitFlags, StartLine, StartChar, PluginData, OpenModeExstFile);
+	Init(NewFileHolder, codepage, nullptr, InitFlags, StartLine, StartChar, PluginData, OpenModeExstFile);
 }
 
-FileEditor::FileEditor(const wchar_t *Name, UINT codepage, DWORD InitFlags, int StartLine, int StartChar,
+FileEditor::FileEditor(FileHolderPtr NewFileHolder, UINT codepage, DWORD InitFlags, int StartLine, int StartChar,
 		const wchar_t *Title, int X1, int Y1, int X2, int Y2, int OpenModeExstFile)
 	:
 	SaveAsTextFormat(0)
@@ -332,7 +332,7 @@ FileEditor::FileEditor(const wchar_t *Name, UINT codepage, DWORD InitFlags, int 
 
 	ScreenObject::SetPosition(X1, Y1, X2, Y2);
 	Flags.Change(FFILEEDIT_FULLSCREEN, (!X1 && !Y1 && X2 == ScrX && Y2 == ScrY));
-	Init(Name, codepage, Title, InitFlags, StartLine, StartChar, L"", OpenModeExstFile);
+	Init(NewFileHolder, codepage, Title, InitFlags, StartLine, StartChar, L"", OpenModeExstFile);
 }
 
 /*
@@ -376,7 +376,7 @@ FileEditor::~FileEditor()
 	delete EditNamesList;
 }
 
-void FileEditor::Init(const wchar_t *Name, UINT codepage, const wchar_t *Title, DWORD InitFlags,
+void FileEditor::Init(FileHolderPtr NewFileHolder, UINT codepage, const wchar_t *Title, DWORD InitFlags,
 		int StartLine, int StartChar, const wchar_t *PluginData, int OpenModeExstFile)
 {
 	SudoClientRegion sdc_rgn;
@@ -401,19 +401,21 @@ void FileEditor::Init(const wchar_t *Name, UINT codepage, const wchar_t *Title, 
 	};
 	SmartLock __smartlock;
 	SysErrorCode = 0;
+	const auto *Name = NewFileHolder->GetPathName().CPtr();
 	int BlankFileName = !StrCmp(Name, Msg::NewFileName);
 	// AY: флаг оповещающий закрытие редактора.
 	m_bClosing = false;
 	bEE_READ_Sent = false;
 	m_AddSignature = FB_NO;
 	m_editor = new Editor;
-	__smartlock.Set(m_editor);
 
 	if (!m_editor) {
 		ExitCode = XC_OPEN_ERROR;
 		return;
 	}
+	__smartlock.Set(m_editor);
 
+	FHP = NewFileHolder;
 	m_codepage = codepage;
 	m_editor->SetOwner(this);
 	m_editor->SetCodePage(m_codepage);
@@ -483,7 +485,7 @@ void FileEditor::Init(const wchar_t *Name, UINT codepage, const wchar_t *Title, 
 						return;
 					default:
 						FrameManager->DeleteFrame(this);	//???
-						SetExitCode(MsgCode == -100 ? XC_EXISTS : XC_QUIT);
+						SetExitCode(XC_QUIT);
 						return;
 				}
 			} else {
@@ -818,10 +820,9 @@ int FileEditor::ReProcessKey(int Key, int CalledFromControl)
 					*/
 					if (ProcessQuitKey(FirstSave, NeedQuestion)) {
 						// объект будет в конце удалён в FrameManager
-						auto *Viewer = new FileViewer(strFullFileName, GetCanLoseFocus(),
+						auto *Viewer = new FileViewer(FHP, GetCanLoseFocus(),
 								Flags.Check(FFILEEDIT_DISABLEHISTORY), FALSE, FilePos, nullptr, EditNamesList,
 								Flags.Check(FFILEEDIT_SAVETOSAVEAS), cp);
-						Viewer->SetFileHolder(FileHolder);
 						Viewer->SetPluginData(strPluginData);
 					}
 
@@ -1943,8 +1944,8 @@ int FileEditor::SaveFile(const wchar_t *Name, int Ask, bool bSaveAs, int TextFor
 		}
 	}
 
-	if (FileHolder && RetCode != SAVEFILE_ERROR)
-		FileHolder->OnFileEdited(Name);
+	if (FHP && RetCode != SAVEFILE_ERROR)
+		FHP->OnFileEdited(Name);
 
 	if (FileUnmakeWritable) {
 		FileUnmakeWritable->Unmake();
@@ -2750,9 +2751,8 @@ void EditConsoleHistory(bool modal)
 		EditorFlags|= FFILEEDIT_ENABLEF6;
 
 	FileEditor *ShellEditor = new (std::nothrow) FileEditor(
-		histfile, CP_UTF8, EditorFlags, std::numeric_limits<int>::max());
+		tfh, CP_UTF8, EditorFlags, std::numeric_limits<int>::max());
 	if (ShellEditor) {
-		ShellEditor->SetFileHolder(tfh);
 		DWORD editorExitCode = ShellEditor->GetExitCode();
 		if (editorExitCode != XC_LOADING_INTERRUPTED && editorExitCode != XC_OPEN_ERROR) {
 			FrameManager->ExecuteModal();

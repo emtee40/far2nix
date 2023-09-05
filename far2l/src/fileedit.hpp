@@ -90,9 +90,9 @@ public:
 		std::vector<char> _tmpcvec;
 	};
 
-	FileEditor(const wchar_t *Name, UINT codepage, DWORD InitFlags, int StartLine = -1, int StartChar = -1,
+	FileEditor(FileHolderPtr NewFileHolder, UINT codepage, DWORD InitFlags, int StartLine = -1, int StartChar = -1,
 			const wchar_t *PluginData = nullptr, int OpenModeExstFile = FEOPMODE_QUERY);
-	FileEditor(const wchar_t *Name, UINT codepage, DWORD InitFlags, int StartLine, int StartChar,
+	FileEditor(FileHolderPtr NewFileHolder, UINT codepage, DWORD InitFlags, int StartLine, int StartChar,
 			const wchar_t *Title, int X1, int Y1, int X2, int Y2, int OpenModeExstFile = FEOPMODE_QUERY);
 	virtual ~FileEditor();
 
@@ -105,8 +105,6 @@ public:
 		Flags.Change(FFILEEDIT_ENABLEF6, AEnableF6);
 		InitKeyBar();
 	}
-	void SetFileHolder(std::shared_ptr<IFileHolder> Observer) { FileHolder = Observer; }
-
 	// Добавлено для поиска по AltF7. При редактировании найденного файла из
 	// архива для клавиши F2 сделать вызов ShiftF2.
 	void SetSaveToSaveAs(int ToSaveAs)
@@ -131,7 +129,6 @@ private:
 	Editor *m_editor;
 	KeyBar EditKeyBar;
 	NamesList *EditNamesList;
-	bool F4KeyOnly;
 	FARString strFileName;
 	FARString strFullFileName;
 	FARString strStartDir;
@@ -142,14 +139,15 @@ private:
 	FAR_FIND_DATA_EX FileInfo;
 	wchar_t AttrStr[4];		// 13.02.2001 IS - Сюда запомним буквы атрибутов, чтобы не вычислять их много раз
 	IUnmakeWritablePtr FileUnmakeWritable;
-	DWORD SysErrorCode;
-	bool m_bClosing;	// 28.04.2005 AY: true когда редактор закрываеться (т.е. в деструкторе)
-	bool bEE_READ_Sent;
-	FemaleBool m_AddSignature;
-	bool BadConversion;
-	UINT m_codepage;	// BUGBUG
-	int SaveAsTextFormat;
-	std::shared_ptr<IFileHolder> FileHolder;
+	DWORD SysErrorCode{false};
+	bool m_bClosing{false};	// 28.04.2005 AY: true когда редактор закрываеться (т.е. в деструкторе)
+	bool bEE_READ_Sent{false};
+	FemaleBool m_AddSignature{FB_NO};
+	bool F4KeyOnly{false};
+	bool BadConversion{false};
+	UINT m_codepage{0};	// BUGBUG
+	int SaveAsTextFormat{0};
+	FileHolderPtr FHP;
 	std::unique_ptr<EditorConfigOrg> EdCfg;
 
 	virtual void DisplayObject();
@@ -158,7 +156,7 @@ private:
 	bool DecideAboutSignature();
 	int ReProcessKey(int Key, int CalledFromControl = TRUE);
 	bool AskOverwrite(const FARString &FileName);
-	void Init(const wchar_t *Name, UINT codepage, const wchar_t *Title, DWORD InitFlags, int StartLine,
+	void Init(FileHolderPtr NewFileHolder, UINT codepage, const wchar_t *Title, DWORD InitFlags, int StartLine,
 			int StartChar, const wchar_t *PluginData, int OpenModeExstFile);
 	virtual void InitKeyBar();
 	virtual int ProcessKey(int Key);
