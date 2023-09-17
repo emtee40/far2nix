@@ -504,6 +504,14 @@ else()
         " COMPONENT system)
 endif()
 
+## far2l plugins
+# https://github.com/VPROFi/netcfgplugin
+# https://github.com/VPROFi/processes
+# https://github.com/VPROFi/sqlplugin
+add_subdirectory (far2l-netcfgplugin)
+add_subdirectory (far2l-processes)
+add_subdirectory (far2l-sqlplugin)
+
 ##############################
 # common install directives
 
