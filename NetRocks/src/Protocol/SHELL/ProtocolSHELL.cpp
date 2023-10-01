@@ -298,9 +298,9 @@ void ProtocolSHELL::KeepAlive(const std::string &path_to_check)
 
 void ProtocolSHELL::GetModes(bool follow_symlink, size_t count, const std::string *pathes, mode_t *modes) noexcept
 {
-	FinalizeExecCmd();
 	fprintf(stderr, "[SHELL] ProtocolSHELL::GetModes follow_symlink=%d count=%lu\n", follow_symlink, (unsigned long)count);
 	try {
+		FinalizeExecCmd();
 		std::string request = follow_symlink ? "mode\n" : "lmode\n";
 		for (size_t i = 0; i != count; ++i) {
 			request+= pathes[i];
@@ -572,7 +572,7 @@ class SHELLFileReader : public IFileReader
 {
 	std::shared_ptr<WayToShell> _way;
 
-	unsigned long _chunk {0};
+	size_t _chunk {0};
 	bool _finished{false};
 	bool _aborting{false};
 
@@ -588,7 +588,7 @@ class SHELLFileReader : public IFileReader
 			throw ProtocolError("read error");
 		}
 		if (wr.index == 0) {
-			_chunk = strtoul(wr.stdout_lines.back().c_str() + 6, nullptr, 10);
+			_chunk = (size_t)strtoul(wr.stdout_lines.back().c_str() + 6, nullptr, 10);
 		} else {
 			_chunk = 0;
 		}

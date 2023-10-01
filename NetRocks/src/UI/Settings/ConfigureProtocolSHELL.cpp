@@ -7,6 +7,7 @@
 #include "../DialogUtils.h"
 #include "../../Globals.h"
 #include "../../Protocol/SHELL/WayToShellConfig.h"
+#include <stdexcept>
 
 /*                                                  55
 345                      28     35                53
@@ -99,6 +100,7 @@ public:
 		_ways_ini = StrWide2MB(G.plugin_path);
 		CutToSlash(_ways_ini, true);
 		_ways_ini+= "SHELL/ways.ini";
+		TranslateInstallPath_Lib2Share(_ways_ini);
 
 		InitializeWays();
 
