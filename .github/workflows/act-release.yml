@@ -1,4 +1,4 @@
-# 2023-08-13 23:30
+# 2023-10-07 08:30
 name: act - Release
 
 on:
@@ -8,7 +8,7 @@ on:
       PLUGINS_EXTRA: 
         description: 'PLUGINS_EXTRA'
         type: boolean
-        default: false
+        default: true
       make_archive_all:
         description: 'Archive ALL'
         type: boolean
