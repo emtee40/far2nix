@@ -51,6 +51,9 @@ jobs:
       run: |
         PLUGINS_EXTRA="true";
         if [[ "$PLUGINS_EXTRA" == "true" ]]; then
+          rm -R far2l-netcfgplugin;
+          rm -R far2l-sqlplugin;
+          rm -R far2l-sqlplugin processes;
           for plug in netcfgplugin sqlplugin processes ; do
             # git clone --depth 1 https://github.com/VPROFi/$plug.git && \
             git clone --depth 1 https://github.com/deep-soft/far2l-$plug.git && \
