@@ -51,9 +51,15 @@ jobs:
       run: |
         PLUGINS_EXTRA="true";
         if [[ "$PLUGINS_EXTRA" == "true" ]]; then
+          # remove existing extra plugins
           rm -R far2l-netcfgplugin;
+          rm -R far2l-processes;
           rm -R far2l-sqlplugin;
-          rm -R far2l-sqlplugin processes;
+          sed -ibak 's!add_subdirectory (far2l-netcfgplugin)!# add_subdirectory (far2l-netcfgplugin)!' CMakeLists.txt;
+          sed -ibak 's!add_subdirectory (far2l-processes)!# add_subdirectory (far2l-processes)!' CMakeLists.txt;
+          sed -ibak 's!add_subdirectory (far2l-sqlplugin)!# add_subdirectory (far2l-sqlplugin)!' CMakeLists.txt;
+
+          # add new extra plugins
           for plug in netcfgplugin sqlplugin processes ; do
             # git clone --depth 1 https://github.com/VPROFi/$plug.git && \
             git clone --depth 1 https://github.com/deep-soft/far2l-$plug.git && \
