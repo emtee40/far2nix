@@ -63,7 +63,8 @@ jobs:
           for plug in netcfgplugin sqlplugin processes ; do
             # git clone --depth 1 https://github.com/VPROFi/$plug.git && \
             git clone --depth 1 https://github.com/deep-soft/far2l-$plug.git && \
-            ( cd $plug && \
+            ( mv far2l-$plug $plug && \
+              cd $plug && \
               find . -mindepth 1 -name 'src' -prune -o -exec rm -rf {} + && \
               mv src/* . && rm -rf src )
             echo "add_subdirectory($plug)" >> CMakeLists.txt
