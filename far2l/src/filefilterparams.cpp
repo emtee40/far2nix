@@ -801,7 +801,7 @@ bool FileFilterConfig(FileFilterParams *FF, bool ColorConfig)
 	switch (DateFormat) {
 		case 0:
 			// Маска даты для форматов DD.MM.YYYYY и MM.DD.YYYYY
-			strDateMask.Format(L"99%c99%c99999", DateSeparator, DateSeparator);
+			strDateMask.Format(L"99%c99%c9999N", DateSeparator, DateSeparator);
 			break;
 		case 1:
 			// Маска даты для форматов DD.MM.YYYYY и MM.DD.YYYYY
