@@ -511,6 +511,8 @@ endif()
 add_subdirectory (far2l-netcfgplugin)
 add_subdirectory (far2l-processes)
 add_subdirectory (far2l-sqlplugin)
+add_subdirectory (far2l-EditWrap)
+add_subdirectory (far2l-jumpword)
 
 ##############################
 # common install directives
