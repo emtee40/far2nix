@@ -1,4 +1,4 @@
-# 2023-10-07 08:30
+# 2023-10-15 09:00
 name: act - Release
 
 on:
@@ -58,6 +58,8 @@ jobs:
           sed -ibak 's!add_subdirectory (far2l-netcfgplugin)!# add_subdirectory (far2l-netcfgplugin)!' CMakeLists.txt;
           sed -ibak 's!add_subdirectory (far2l-processes)!# add_subdirectory (far2l-processes)!' CMakeLists.txt;
           sed -ibak 's!add_subdirectory (far2l-sqlplugin)!# add_subdirectory (far2l-sqlplugin)!' CMakeLists.txt;
+          sed -ibak 's!add_subdirectory (far2l-EditWrap)!# add_subdirectory (far2l-EditWrap)!' CMakeLists.txt;
+          sed -ibak 's!add_subdirectory (far2l-jumpword)!# add_subdirectory (far2l-jumpword)!' CMakeLists.txt;
 
           # add new extra plugins
           for plug in netcfgplugin sqlplugin processes ; do
@@ -67,6 +69,11 @@ jobs:
               cd $plug && \
               find . -mindepth 1 -name 'src' -prune -o -exec rm -rf {} + && \
               mv src/* . && rm -rf src )
+            echo "add_subdirectory($plug)" >> CMakeLists.txt
+          done
+          # far2l-EditWrap far2l-jumpword
+          for plug in EditWrap jumpword ; do
+            git clone --depth 1 https://github.com/deep-soft/far2l-$plug.git && \
             echo "add_subdirectory($plug)" >> CMakeLists.txt
           done
         fi
