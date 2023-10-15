@@ -76,6 +76,7 @@ jobs:
           # far2l-EditWrap far2l-jumpword
           for plug in EditWrap jumpword ; do
             git clone --depth 1 https://github.com/deep-soft/far2l-$plug.git && \
+            ( mv far2l-$plug $plug )
             echo "add_subdirectory($plug)" >> CMakeLists.txt
           done
         fi
