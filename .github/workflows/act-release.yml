@@ -73,7 +73,6 @@ jobs:
               find . -mindepth 1 -name 'src' -prune -o -exec rm -rf {} + && \
               mv src/* . && rm -rf src )
             echo "add_subdirectory($plug)" >> CMakeLists.txt
-            grep "add_subdirectory" CMakeLists.txt
           done
           # far2l-EditWrap far2l-jumpword
           for plug in EditWrap jumpword ; do
@@ -81,8 +80,8 @@ jobs:
             ( echo "mv far2l-$plug $plug" && \
               mv far2l-$plug $plug )
             echo "add_subdirectory($plug)" >> CMakeLists.txt
-            grep "add_subdirectory" CMakeLists.txt
           done
+          grep "add_subdirectory" CMakeLists.txt
         fi
 
     - name: get os version
