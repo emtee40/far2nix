@@ -43,6 +43,8 @@ if(GIT_FOUND)
         OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
 
+string(TIMESTAMP CRT_DATE "%Y%m%d")
+
 if(NOT "${GIT_TAG}" STREQUAL "v_${VERSION}")
     if(GIT_FOUND)
         execute_process(COMMAND "${GIT_EXECUTABLE}" rev-parse --short HEAD
@@ -52,13 +54,11 @@ if(NOT "${GIT_TAG}" STREQUAL "v_${VERSION}")
     endif()
     if(NOT "${GIT_HASH}" STREQUAL "")
         message(STATUS "git hash: ${GIT_HASH}")
-        set(VERSION_PATCH "${VERSION_PATCH}-${GIT_HASH}")
+        set(VERSION_PATCH "${VERSION_PATCH}-${GIT_HASH}-${CRT_DATE}")
     else()
         message(WARNING "git information unavailable, assuming its a build from v_${VERSION}")
     endif()
 endif()
-
-string(TIMESTAMP CRT_DATE "%Y%m%d")
 
 set(VERSION_PATCH "${VERSION_PATCH}-${CRT_DATE}")
 
