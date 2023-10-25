@@ -58,7 +58,9 @@ if(NOT "${GIT_TAG}" STREQUAL "v_${VERSION}")
     endif()
 endif()
 
-set(VERSION_PATCH "${VERSION_PATCH}-beta")
+string(TIMESTAMP TODAY "%Y%m%d")
+
+set(VERSION_PATCH "${VERSION_PATCH}-${TIMESTAMP}")
 
 set(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
