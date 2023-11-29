@@ -5,6 +5,6 @@
 #1
 S:#ifdef HAVE_LIBARCHIVE
 R:	AddPluginItem(PDF_IsArchive, PDF_OpenArchive, PDF_GetArcItem, NULL, PDF_CloseArchive, PDF_GetFormatName, PDF_GetDefaultCommands, NULL, PDF_GetSFXPos);\n#ifdef HAVE_LIBARCHIVE
-F:ArcPlg.cpp
+F:multiarc/src/ArcPlg.cpp
 
 #EOF
