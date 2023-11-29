@@ -80,10 +80,17 @@ jobs:
         DEBUG_MODE_2: ${{ inputs.DEBUG_MODE_2 }}
       run: |
         unzip -q bins/multiarc-pdf-add.zip
+
         cat multiarc/src/formats/all.h-add-pdf-new >> multiarc/src/formats/all.h
         echo "cat multiarc/src/formats/all.h - begin"
         cat multiarc/src/formats/all.h
         echo "cat multiarc/src/formats/all.h - end"
+
+        cat multiarc/CMakeLists.txt-add >> multiarc/CMakeLists.txt
+        echo "cat multiarc/CMakeLists.txt - begin"
+        cat multiarc/CMakeLists.txt
+        echo "cat multiarc/CMakeLists.txt - end"
+
         bash bins/sed-stuff.sh "sed-stuff-multiarc-pdf.txt" "${{ inputs.MULTIARC_PDF_PARAMS }}"
 
     - name: sed-stuff
