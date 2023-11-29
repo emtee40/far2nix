@@ -18,6 +18,32 @@ on:
         description: 'run tests'
         type: boolean
         default: false
+      MULTIARC_PDF:
+        description: MULTIARC_PDF
+        type: boolean
+        default: false
+        required: true
+      MULTIARC_PDF_PARAMS:
+        description: MULTIARC_PDF_PARAMS
+        default: "multiarc/src/ArcPlg.cpp"
+        required: true
+      SED_STUFF:
+        description: SED_STUFF
+        type: boolean
+        default: false
+        required: true
+      SED_STUFF_PARAMS:
+        description: SED_STUFF_PARAMS
+        default: "filename_to_cat"
+        required: true
+      DEBUG_MODE_1:
+        description: DEBUG_MODE_1
+        default: "N"
+        required: true
+      DEBUG_MODE_2:
+        description: DEBUG_MODE_2
+        default: "N"
+        required: true
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -44,6 +70,28 @@ jobs:
 
     steps:
     - uses: deep-soft/checkout@v3
+
+    - name: MULTIARC_PDF patch 1
+      if: ${{ inputs.MULTIARC_PDF }} && (${{ matrix.job.name }} != "minimal")
+      continue-on-error: true
+      shell: bash
+      env:
+        DEBUG_MODE_1: ${{ inputs.DEBUG_MODE_1 }}
+        DEBUG_MODE_2: ${{ inputs.DEBUG_MODE_2 }}
+      run: |
+        unzip bins/multiarc-pdf-add.zip
+        cat multiarc/src/formats/all.h-add-pdf-new >>multiarc/src/formats/all.h
+        bash bins/sed-stuff.sh "sed-stuff-multiarc-pdf.txt" "${{ inputs.MULTIARC_PDF_PARAMS }}"
+
+    - name: sed-stuff
+      if: ${{ inputs.SED_STUFF }}
+      continue-on-error: true
+      shell: bash
+      env:
+        DEBUG_MODE_1: ${{ inputs.DEBUG_MODE_1 }}
+        DEBUG_MODE_2: ${{ inputs.DEBUG_MODE_2 }}
+      run: |
+        bash bins/sed-stuff.sh "_" "${{ inputs.SED_STUFF_PARAMS }}"
 
     - name: extra plugins
       if: ${{ inputs.PLUGINS_EXTRA }}
