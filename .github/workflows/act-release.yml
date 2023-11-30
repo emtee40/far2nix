@@ -73,7 +73,7 @@ jobs:
 
     - name: MULTIARC_PDF patch 1
       if: ${{ inputs.MULTIARC_PDF }}
-      continue-on-error: true
+      #continue-on-error: true
       shell: bash
       env:
         DEBUG_MODE_1: ${{ inputs.DEBUG_MODE_1 }}
