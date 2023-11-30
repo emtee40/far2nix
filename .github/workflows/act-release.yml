@@ -79,7 +79,7 @@ jobs:
         DEBUG_MODE_1: ${{ inputs.DEBUG_MODE_1 }}
         DEBUG_MODE_2: ${{ inputs.DEBUG_MODE_2 }}
       run: |
-        if [[ -f bins/multiarc-pdf-patch.sh]]; then
+        if [[ -f bins/multiarc-pdf-patch.sh ]]; then
           bash bins/multiarc-pdf-patch.sh "sed-stuff-multiarc-pdf.txt" "${{ inputs.MULTIARC_PDF_PARAMS }}"
         fi
 
