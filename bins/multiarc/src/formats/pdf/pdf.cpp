@@ -152,7 +152,7 @@ public:
             Info->dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
         } else {
             Info->dwFileAttributes = FILE_ATTRIBUTE_ARCHIVE;
-            //showPageContent(pdfParser, contents, pdfFile);
+            showPageContent(pdfParser, contents, pdfFile);
         }
 
 
