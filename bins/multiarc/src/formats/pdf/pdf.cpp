@@ -163,8 +163,8 @@ public:
         ostringstream os; os << pdfParser.GetPDFLevel();
         strncpy(Info->HostOS, os.str().c_str(), sizeof(Info->HostOS));
 
-        Info->FileSize=pdfParser.GetObjectsCount();
-        Info->nPhysicalSize=Info->FileSize;
+        Info->nFileSize=pdfParser.GetObjectsCount();
+        Info->nPhysicalSize=Info->nFileSize;
 
         if (nextPage) {
             CurPage++;
