@@ -161,7 +161,7 @@ public:
 #        strncpy(Info->cFileName, sPath.c_str(), sizeof(Info->cFileName));
 
         ostringstream os; os << pdfParser.GetPDFLevel();
-        Info->HostOS.assign(os.str().c_str(), sizeof(Info->HostOS));
+#NOTOK        Info->HostOS.assign(os.str().c_str(), sizeof(Info->HostOS));
 #        strncpy(Info->HostOS, os.str().c_str(), sizeof(Info->HostOS));
 
         Info->nFileSize=pdfParser.GetObjectsCount();
