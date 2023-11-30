@@ -149,21 +149,22 @@ public:
         bool nextPage = true;
         if (!contents) {
             nextPage = true;
-            Info->FindData.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
+            Info->dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
         } else {
-            Info->FindData.dwFileAttributes = FILE_ATTRIBUTE_ARCHIVE;
+            Info->dwFileAttributes = FILE_ATTRIBUTE_ARCHIVE;
             //showPageContent(pdfParser, contents, pdfFile);
         }
 
 
         string sPath = BuildPath(CurPage, "ttt");
-        strncpy(Info->FindData.cFileName, sPath.c_str(), sizeof(Info->FindData.cFileName));
+        Info->PathName.assign(sPath.c_str(), sizeof(Info->PathName));
+#        strncpy(Info->cFileName, sPath.c_str(), sizeof(Info->cFileName));
 
         ostringstream os; os << pdfParser.GetPDFLevel();
         strncpy(Info->HostOS, os.str().c_str(), sizeof(Info->HostOS));
 
-        Info->FindData.FileSize=pdfParser.GetObjectsCount();
-        Info->nPhysicalSize=Item->FindData.FileSize;
+        Info->FileSize=pdfParser.GetObjectsCount();
+        Info->nPhysicalSize=Info->FileSize;
 
         if (nextPage) {
             CurPage++;
