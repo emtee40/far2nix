@@ -56,6 +56,8 @@ using namespace std;
 #endif
 */
 
+void showPageContent(PDFParser&,RefCountPtr<PDFObject>,InputFile&);
+
 class PDFTreeIterator {
     PDFObject *inObject;
 public:
@@ -194,7 +196,7 @@ static PDFTraverser *s_selected_traverser = NULL;
 void showPagesInfo(PDFParser&,InputFile&,EStatusCode);
 void checkXObjectRef(PDFParser&,RefCountPtr<PDFDictionary>);
 void showXObjectsPerPageInfo(PDFParser&,PDFObjectCastPtr<PDFDictionary>);
-void showPageContent(PDFParser&,RefCountPtr<PDFObject>,InputFile&);
+//void showPageContent(PDFParser&,RefCountPtr<PDFObject>,InputFile&);
 void showContentStream(PDFStreamInput*,IByteReaderWithPosition*,PDFParser&);
 
 void WINAPI UnixTimeToFileTime( DWORD time, FILETIME * ft );
