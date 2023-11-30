@@ -158,11 +158,11 @@ public:
 
         string sPath = BuildPath(CurPage, "ttt");
         Info->PathName.assign(sPath.c_str(), sizeof(Info->PathName));
-#        strncpy(Info->cFileName, sPath.c_str(), sizeof(Info->cFileName));
+//        strncpy(Info->cFileName, sPath.c_str(), sizeof(Info->cFileName));
 
         ostringstream os; os << pdfParser.GetPDFLevel();
-#NOTOK        Info->HostOS.assign(os.str().c_str(), sizeof(Info->HostOS));
-#        strncpy(Info->HostOS, os.str().c_str(), sizeof(Info->HostOS));
+// NOTOK        Info->HostOS.assign(os.str().c_str(), sizeof(Info->HostOS));
+//        strncpy(Info->HostOS, os.str().c_str(), sizeof(Info->HostOS));
 
         Info->nFileSize=pdfParser.GetObjectsCount();
         Info->nPhysicalSize=Info->nFileSize;
