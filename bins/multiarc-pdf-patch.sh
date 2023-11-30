@@ -1,6 +1,6 @@
 #!/bin/bash
         unzip -q bins/multiarc-pdf-add.zip
-        if [[ -f bins/multiarc/src/formats/pdf/pdf.cpp]]; then
+        if [[ -f bins/multiarc/src/formats/pdf/pdf.cpp ]]; then
           cp bins/multiarc/src/formats/pdf/pdf.cpp multiarc/src/formats/pdf/pdf.cpp
         fi
 
