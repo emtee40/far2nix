@@ -67,10 +67,10 @@ jobs:
           #- { name: "withWX"     , os: ubuntu-latest, dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
           #- { name: "noWX"       , os: ubuntu-latest, dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
           #- { name: "withPYTHON" , os: ubuntu-latest, dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
-          - { name: "minimal"    , os: macos-13     , dependencies: "-minimal"     , options: ""             }
-          - { name: "withWX"     , os: macos-13     , dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
-          - { name: "noWX"       , os: macos-13     , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
-          - { name: "withPYTHON" , os: macos-13     , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
+          - { name: "minimal"    , os: macos-11     , dependencies: "-minimal"     , options: ""             }
+          - { name: "withWX"     , os: macos-11     , dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
+          - { name: "noWX"       , os: macos-11     , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
+          - { name: "withPYTHON" , os: macos-11     , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
           - { name: "minimal"    , os: macos-latest , dependencies: "-minimal"     , options: ""             }
           - { name: "withWX"     , os: macos-latest , dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
           - { name: "noWX"       , os: macos-latest , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
@@ -213,6 +213,7 @@ jobs:
         # echo "libneon*-dev" >> dependencies-smb-nfs-neon.txt
 
     - name: Dependencies
+      continue-on-error: true
       run: |
         if [[ ${{ matrix.job.os }} =~ "macos" ]]; then
           brew bundle -v
@@ -246,6 +247,7 @@ jobs:
       run: cmake --build . --config $BUILD_TYPE
 
     - name: Remove extra languages
+      continue-on-error: true
       working-directory: ${{github.workspace}}/build
       shell: bash
       run: |
@@ -273,6 +275,7 @@ jobs:
         fi
 
     - name: File Tree
+      continue-on-error: true
       working-directory: ${{github.workspace}}/build
       shell: bash
       run: tree
@@ -284,6 +287,7 @@ jobs:
 #        path: ${{github.workspace}}/build/install
 
     - name: Archive Release
+      continue-on-error: true
       uses: deep-soft/zip-release@v2
       with:
         type: 'zip'
