@@ -63,8 +63,6 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          name: [minimal, withWX, noWX, withPYTHON]
-          include:
           #- { name: "minimal"    , os: ubuntu-20.04 , dependencies: "-minimal"     , options: ""             }
           #- { name: "withWX"     , os: ubuntu-20.04 , dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
           #- { name: "noWX"       , os: ubuntu-20.04 , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
