@@ -63,6 +63,8 @@ jobs:
       fail-fast: false
       matrix:
         job:
+          name: [minimal, withWX, noWX, withPYTHON]
+          include:
           #- { name: "minimal"    , os: ubuntu-20.04 , dependencies: "-minimal"     , options: ""             }
           #- { name: "withWX"     , os: ubuntu-20.04 , dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
           #- { name: "noWX"       , os: ubuntu-20.04 , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
@@ -80,7 +82,7 @@ jobs:
           - { name: "noWX"       , os: macos-latest , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
           #- { name: "withPYTHON" , os: macos-latest , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
 
-    #if: matrix.job.name != 'withPYTHON' || ${{ inputs.withPYTHON }}
+    #if: ${{ matrix.job.name }} != 'withPYTHON' || ${{ inputs.withPYTHON }}
     steps:
     - uses: deep-soft/checkout@v3
 
