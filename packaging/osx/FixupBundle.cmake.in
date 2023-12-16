@@ -15,7 +15,11 @@ fixup_bundle("${APP_INSTALL_DIR}" "${PLUGINS}" "" IGNORE_ITEM "python;python3;py
 # for plugins created incorrect dependencies in copied into Frameworks libraries.
 # So here is stupidly simple workaround: create Frameworks symlink in eaach plugin's dir
 # that relatively point to main bundle's Frameworks.
-file(GLOB PLUGINDIRS "${APP_INSTALL_DIR}/Contents/MacOS/Plugins/*")
+#file(GLOB PLUGINDIRS "${APP_INSTALL_DIR}/Contents/MacOS/Plugins/*")
+#foreach(PLUGINDIR ${PLUGINDIRS})
+#	execute_process(COMMAND ln -s ../../../Frameworks "${PLUGINDIR}/Frameworks")
+#endforeach()
+file(GLOB PLUGINDIRS "${APP_INSTALL_DIR}/Contents/MacOS/*")
 foreach(PLUGINDIR ${PLUGINDIRS})
 	execute_process(COMMAND ln -s ../../../Frameworks "${PLUGINDIR}/Frameworks")
 endforeach()
