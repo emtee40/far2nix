@@ -5,6 +5,10 @@ on:
 #  push
   workflow_dispatch:
     inputs:
+      withPYTHON:
+        description: 'withPYTHON'
+        type: boolean
+        default: false
       PLUGINS_EXTRA: 
         description: 'PLUGINS_EXTRA'
         type: boolean
@@ -70,11 +74,11 @@ jobs:
           - { name: "minimal"    , os: macos-12     , dependencies: "-minimal"     , options: ""             }
           - { name: "withWX"     , os: macos-12     , dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
           - { name: "noWX"       , os: macos-12     , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
-          - { name: "withPYTHON" , os: macos-12     , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
+          - if: ${{ inputs.withPYTHON }} { name: "withPYTHON" , os: macos-12     , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
           - { name: "minimal"    , os: macos-latest , dependencies: "-minimal"     , options: ""             }
           - { name: "withWX"     , os: macos-latest , dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
           - { name: "noWX"       , os: macos-latest , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
-          - { name: "withPYTHON" , os: macos-latest , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
+          - if: ${{ inputs.withPYTHON }} { name: "withPYTHON" , os: macos-latest , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
 
     steps:
     - uses: deep-soft/checkout@v3
