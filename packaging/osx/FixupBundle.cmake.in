@@ -8,24 +8,17 @@ include(BundleUtilities)
 set(BU_CHMOD_BUNDLE_ITEMS TRUE)
 set(APP_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/@APP_NAME@.app")
 file(GLOB_RECURSE PLUGINS "${APP_INSTALL_DIR}/**/*.far-plug*" "${APP_INSTALL_DIR}/**/*.so")
-#fixup_bundle("${APP_INSTALL_DIR}" "${PLUGINS}" "" IGNORE_ITEM "python;python3;python3.8;Python;.Python")
+fixup_bundle("${APP_INSTALL_DIR}" "${PLUGINS}" "" IGNORE_ITEM "python;python3;python3.8;Python;.Python")
 
 # STEP 2:
 # Unfortunately cmake's fixup_bundle doesnt know about @loader_path and previous solution
 # for plugins created incorrect dependencies in copied into Frameworks libraries.
 # So here is stupidly simple workaround: create Frameworks symlink in eaach plugin's dir
 # that relatively point to main bundle's Frameworks.
-#file(GLOB PLUGINDIRS "${APP_INSTALL_DIR}/Contents/MacOS/Plugins/*")
-#foreach(PLUGINDIR ${PLUGINDIRS})
-#	execute_process(COMMAND ln -s ../../../Frameworks "${PLUGINDIR}/Frameworks")
-#endforeach()
-file(GLOB PLUGINDIRS "${APP_INSTALL_DIR}/Contents/MacOS/*")
+file(GLOB PLUGINDIRS "${APP_INSTALL_DIR}/Contents/MacOS/Plugins/*")
 foreach(PLUGINDIR ${PLUGINDIRS})
 	execute_process(COMMAND ln -s ../../../Frameworks "${PLUGINDIR}/Frameworks")
 endforeach()
-
-#moved here 
-fixup_bundle("${APP_INSTALL_DIR}" "${PLUGINS}" "" IGNORE_ITEM "python;python3;python3.8;Python;.Python")
 
 set(CODESIGN_CERT "$ENV{FAR2L_CODESIGN_CERT}")
 
