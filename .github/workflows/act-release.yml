@@ -1,4 +1,4 @@
-# 2023-10-15 09:00
+# 2023-12-16 09:10
 name: act - Release
 
 on:
@@ -71,6 +71,37 @@ jobs:
     steps:
     - uses: deep-soft/checkout@v3
 
+    - name: get os version
+      shell: bash
+      run: |
+        set -x
+        _os_release_file_="/etc/os-release"
+        if [ -f $_os_release_file_ ]; then
+          echo "-1-"
+          cat "$_os_release_file_"
+          echo "-2-"
+             _os_name_=$(cat $_os_release_file_ | grep         "^ID=" | head -n 1 | awk -F = '{print $2}' | tr -d \")
+          _os_version_=$(cat $_os_release_file_ | grep "^VERSION_ID=" | head -n 1 | awk -F = '{print $2}' | tr -d \")
+          echo "OS_VERSION=$_os_name_-$_os_version_" >> $GITHUB_ENV
+        fi
+
+    - name: print os version
+      shell: bash
+      run: |
+        echo "OS_VERSION=${{ env.OS_VERSION }}"
+
+    - name: set program version
+      shell: bash
+      run: |
+        set -x
+        _version_=$(cat packaging/version)
+        echo "PROG_VERSION=v$_version_" >> $GITHUB_ENV
+
+    - name: print program version
+      shell: bash
+      run: |
+        echo "PROG_VERSION=${{ env.PROG_VERSION }}"
+
     - name: MULTIARC_PDF patch 1
       if: ${{ inputs.MULTIARC_PDF }}
       #continue-on-error: true
@@ -132,37 +163,6 @@ jobs:
           done
           grep "add_subdirectory" CMakeLists.txt
         fi
-
-    - name: get os version
-      shell: bash
-      run: |
-        set -x
-        _os_release_file_="/etc/os-release"
-        if [ -f $_os_release_file_ ]; then
-          echo "-1-"
-          cat "$_os_release_file_"
-          echo "-2-"
-             _os_name_=$(cat $_os_release_file_ | grep         "^ID=" | head -n 1 | awk -F = '{print $2}' | tr -d \")
-          _os_version_=$(cat $_os_release_file_ | grep "^VERSION_ID=" | head -n 1 | awk -F = '{print $2}' | tr -d \")
-          echo "OS_VERSION=$_os_name_-$_os_version_" >> $GITHUB_ENV
-        fi
-
-    - name: print os version
-      shell: bash
-      run: |
-        echo "OS_VERSION=${{ env.OS_VERSION }}"
-
-    - name: set program version
-      shell: bash
-      run: |
-        set -x
-        _version_=$(cat packaging/version)
-        echo "PROG_VERSION=v$_version_" >> $GITHUB_ENV
-
-    - name: print program version
-      shell: bash
-      run: |
-        echo "PROG_VERSION=${{ env.PROG_VERSION }}"
 
     - name: add dependencies
       shell: bash
