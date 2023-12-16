@@ -133,8 +133,13 @@ jobs:
           # sed -ibak 's!add_subdirectory (far2l-EditWrap)!# add_subdirectory (far2l-EditWrap)!' CMakeLists.txt;
           # sed -ibak 's!add_subdirectory (far2l-jumpword)!# add_subdirectory (far2l-jumpword)!' CMakeLists.txt;
 
+          if [[ ${{ matrix.job.os }} =~ "macos" ]]; then          
+            extra_plugin_list='netcfgplugin sqlplugin';
+          else
+            extra_plugin_list='netcfgplugin sqlplugin processes';
+          fi
           # add new extra plugins
-          for plug in netcfgplugin sqlplugin processes ; do
+          for plug in $extra_plugins_list ; do
             # git clone --depth 1 https://github.com/VPROFi/$plug.git && \
             git clone --depth 1 https://github.com/deep-soft/far2l-$plug.git && \
             ( echo "mv far2l-$plug $plug" && \
