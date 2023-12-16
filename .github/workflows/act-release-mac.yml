@@ -58,7 +58,6 @@ env:
 jobs:
   build:
     name: ${{ matrix.job.name }} (${{ matrix.job.os }})
-    if: (${{ matrix.job.name }} != 'withPYTHON' ) || ${{ inputs.withPYTHON }}
     runs-on: ${{ matrix.job.os }}
     strategy:
       fail-fast: false
@@ -75,12 +74,13 @@ jobs:
           - { name: "minimal"    , os: macos-12     , dependencies: "-minimal"     , options: ""             }
           - { name: "withWX"     , os: macos-12     , dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
           - { name: "noWX"       , os: macos-12     , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
-          - { name: "withPYTHON" , os: macos-12     , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
+          #- { name: "withPYTHON" , os: macos-12     , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
           - { name: "minimal"    , os: macos-latest , dependencies: "-minimal"     , options: ""             }
           - { name: "withWX"     , os: macos-latest , dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
           - { name: "noWX"       , os: macos-latest , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
-          - { name: "withPYTHON" , os: macos-latest , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
+          #- { name: "withPYTHON" , os: macos-latest , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
 
+    #if: (${{ matrix.job.name }} != 'withPYTHON' ) || ${{ inputs.withPYTHON }}
     steps:
     - uses: deep-soft/checkout@v3
 
@@ -169,8 +169,9 @@ jobs:
           grep -r "sprintf" . | sed -ibak "s!sprintf!snprintf!"
           f_found=$(grep -rl --exclude-dir=.git --exclude=Cargo.* --exclude=*.lock "sprintf" . | tr '\r' ' ' | tr '\n' ' ')
           if [ ${#f_found} -ge 2 ]; then
-            $SED_EXE -ibak "s!sprintf!snprintf!" $f_found
-            printf '@(_%s_)\r\n' $f_found
+            echo "f_found=$f_found";
+            $SED_EXE -ibak 's!sprintf!snprintf!g' $f_found;
+            printf '@(_%s_)\r\n' $f_found;
           fi
         fi
 
