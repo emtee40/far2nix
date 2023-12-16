@@ -215,6 +215,7 @@ jobs:
     - name: Dependencies
       run: |
         if [[ ${{ matrix.job.os }} =~ "macos" ]]; then
+          brew install libxau tree
           brew bundle -v
           export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$(brew --prefix)/opt/openssl/lib/pkgconfig:$(brew --prefix)/opt/libarchive/lib/pkgconfig"
           echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH" >> $GITHUB_ENV
