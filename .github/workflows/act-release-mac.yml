@@ -166,13 +166,14 @@ jobs:
       run: |
         if [[ ${{ matrix.job.os }} =~ "macos" ]]; then
           echo "macos sprintf to snprintf"
-          grep -r "sprintf" . | sed -ibak "s!sprintf!snprintf!"
           f_found=$(grep -rl --exclude-dir=.git --exclude=Cargo.* --exclude=*.lock "sprintf" . | tr '\r' ' ' | tr '\n' ' ')
           if [ ${#f_found} -ge 2 ]; then
-            echo "f_found=$f_found";
-            $SED_EXE -ibak 's!sprintf!snprintf!g' $f_found;
+            #echo "f_found=$f_found";
             printf '@(_%s_)\r\n' $f_found;
+            $SED_EXE -ibak 's!sprintf!snprintf!g' $f_found;
           fi
+          f_found_2=$(grep -rl --exclude-dir=.git --exclude=Cargo.* --exclude=*.lock "sprintf" . | tr '\r' ' ' | tr '\n' ' ')
+          printf '@(_%s_)\r\n' $f_found_2;
         fi
 
     - name: extra plugins
