@@ -96,9 +96,7 @@ jobs:
           export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$(brew --prefix)/opt/openssl/lib/pkgconfig:$(brew --prefix)/opt/libarchive/lib/pkgconfig"
           echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH" >> $GITHUB_ENV
           brew install libxau tree
-          ls -lR /opt/homebrew/Cellar/libxau/ || true;
-          ls /opt/homebrew/Cellar/libxau/* || true;
-          ls /usr/local/Cellar/libxau/* || true;
+          ls -lR /usr/local/Cellar/libxau/* || true;
         else
           sudo apt-get update ; sudo apt-get -y install $(cat dependencies${{ matrix.job.dependencies }}.txt)
         fi
