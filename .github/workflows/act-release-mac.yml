@@ -80,7 +80,7 @@ jobs:
           - { name: "noWX"       , os: macos-latest , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
           #- { name: "withPYTHON" , os: macos-latest , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
 
-    #if: (${{ matrix.job.name }} != 'withPYTHON' ) || ${{ inputs.withPYTHON }}
+    if: matrix.job.name != 'withPYTHON' || ${{ inputs.withPYTHON }}
     steps:
     - uses: deep-soft/checkout@v3
 
