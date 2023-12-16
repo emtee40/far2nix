@@ -1,7 +1,27 @@
 #!/bin/bash
 #sed-stuff.sh
-#2023-11-29 20:00
+#2023-12-16 08:40
 #BOF
+
+export os_name=$("uname")
+case $os_name in
+  Darwin*)
+    echo "Run on OSX"
+    echo "Install gnu-sed"
+    brew install gnu-sed
+    export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
+    echo "SED_EXE=$(which sed)" >> $GITHUB_ENV
+    ls -l /usr/local/opt/gnu-sed/libexec/gnubin
+  ;;
+  Linux*)
+    echo "Run on Linux"
+    echo "SED_EXE=$(which sed)" >> $GITHUB_ENV
+    ;;
+  *)
+    echo "Run on unknown OS: $os_name"
+    echo "SED_EXE=$(which sed)" >> $GITHUB_ENV
+  ;;
+esac
 
 FILE_TO_CAT="$2";
 debug_mode="$DEBUG_MODE_1";
@@ -50,10 +70,10 @@ if [[ -f "$file_in" ]]; then
     if [[ "$_fil_" != "" ]]; then
       if [[ -f "$_fil_" ]]; then
         ((countf++));
-        echo_debug "sed -i \"s|$_str_|$_rpl_|\" $_fil_";
+        echo_debug "$SED_EXE -i \"s|$_str_|$_rpl_|\" $_fil_";
         _str_s_=$(grep "$_str_" "$_fil_");
         echo_debug_2 "CNTF:$countf: $_str_n_";
-        sed -i "s|$_str_|$_rpl_|" $_fil_;
+        $SED_EXE -i "s|$_str_|$_rpl_|" $_fil_;
         _str_r_=$(grep "$_rpl_" "$_fil_");
         if [[ "$_str_s_" != "" ]] && [[ "$_str_r_" != "" ]]; then
           echo "OK_OK: [CNT:$count, CNTF:$countf]";
