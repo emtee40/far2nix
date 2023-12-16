@@ -59,14 +59,14 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          #- { name: "minimal"    , os: ubuntu-20.04 , dependencies: "-minimal"     , options: ""             }
-          #- { name: "withWX"     , os: ubuntu-20.04 , dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
-          #- { name: "noWX"       , os: ubuntu-20.04 , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
-          #- { name: "withPYTHON" , os: ubuntu-20.04 , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
-          #- { name: "minimal"    , os: ubuntu-latest, dependencies: "-minimal"     , options: ""             }
-          #- { name: "withWX"     , os: ubuntu-latest, dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
-          #- { name: "noWX"       , os: ubuntu-latest, dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
-          #- { name: "withPYTHON" , os: ubuntu-latest, dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
+          - { name: "minimal"    , os: ubuntu-20.04 , dependencies: "-minimal"     , options: ""             }
+          - { name: "withWX"     , os: ubuntu-20.04 , dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
+          - { name: "noWX"       , os: ubuntu-20.04 , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
+          - { name: "withPYTHON" , os: ubuntu-20.04 , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
+          - { name: "minimal"    , os: ubuntu-latest, dependencies: "-minimal"     , options: ""             }
+          - { name: "withWX"     , os: ubuntu-latest, dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
+          - { name: "noWX"       , os: ubuntu-latest, dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
+          - { name: "withPYTHON" , os: ubuntu-latest, dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
           - { name: "minimal"    , os: macos-latest , dependencies: "-minimal"     , options: ""             }
           - { name: "withWX"     , os: macos-latest , dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
           - { name: "noWX"       , os: macos-latest , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
@@ -170,10 +170,12 @@ jobs:
           # sed -ibak 's!add_subdirectory (far2l-EditWrap)!# add_subdirectory (far2l-EditWrap)!' CMakeLists.txt;
           # sed -ibak 's!add_subdirectory (far2l-jumpword)!# add_subdirectory (far2l-jumpword)!' CMakeLists.txt;
 
-          if [[ ${{ matrix.job.os }} =~ "macos" ]]; then          
+          if [[ ${{ matrix.job.os }} =~ "macos" ]]; then
             extra_plugin_list='netcfgplugin sqlplugin';
+            extra_plugin_list2='EditWrap';
           else
             extra_plugin_list='netcfgplugin sqlplugin processes';
+            extra_plugin_list2='EditWrap jumpword';
           fi
           # add new extra plugins
           for plug in $extra_plugins_list ; do
@@ -187,7 +189,7 @@ jobs:
             echo "add_subdirectory($plug)" >> CMakeLists.txt
           done
           # far2l-EditWrap far2l-jumpword
-          for plug in EditWrap jumpword ; do
+          for plug in $extra_plugin_list2 ; do
             git clone --depth 1 https://github.com/deep-soft/far2l-$plug.git && \
             ( echo "mv far2l-$plug $plug" && \
               mv far2l-$plug $plug )
@@ -257,8 +259,12 @@ jobs:
       shell: bash
       run: |
         cmake --build . --target package
-        mv ${{ env.PROG_NAME }}*.deb    ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ env.OS_VERSION }}-${{ matrix.job.name }}.deb
-        mv ${{ env.PROG_NAME }}*.tar.gz ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ env.OS_VERSION }}-${{ matrix.job.name }}.tar.gz
+        if [[ ${{ matrix.job.os }} =~ "macos" ]]; then
+          mv ${{ env.PROG_NAME }}*.dmg    ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ env.OS_VERSION }}-${{ matrix.job.name }}.dmg
+        else
+          mv ${{ env.PROG_NAME }}*.deb    ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ env.OS_VERSION }}-${{ matrix.job.name }}.deb
+          mv ${{ env.PROG_NAME }}*.tar.gz ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-${{ env.OS_VERSION }}-${{ matrix.job.name }}.tar.gz
+        fi
 
     - name: File Tree
       working-directory: ${{github.workspace}}/build
@@ -293,6 +299,7 @@ jobs:
           ${{ env.ZIP_RELEASE_ARCHIVE }}
           ${{github.workspace}}/build/${{ env.PROG_NAME }}*.deb
           ${{github.workspace}}/build/${{ env.PROG_NAME }}*.tar.gz
+          ${{github.workspace}}/build/${{ env.PROG_NAME }}*.dmg
 
     - name: Archive Release - All
       if: ${{ inputs.make_archive_all }}
