@@ -5,6 +5,10 @@ on:
 #  push
   workflow_dispatch:
     inputs:
+#      sprintf:
+#        description: 'sprintf'
+#        type: boolean
+#        default: false
       PLUGINS_EXTRA: 
         description: 'PLUGINS_EXTRA'
         type: boolean
@@ -67,11 +71,16 @@ jobs:
           - { name: "withWX"     , os: ubuntu-latest, dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
           - { name: "noWX"       , os: ubuntu-latest, dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
           - { name: "withPYTHON" , os: ubuntu-latest, dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
+          - { name: "minimal"    , os: macos-12     , dependencies: "-minimal"     , options: ""             }
+          - { name: "withWX"     , os: macos-12     , dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
+          - { name: "noWX"       , os: macos-12     , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
+          #- { name: "withPYTHON" , os: macos-12     , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
           - { name: "minimal"    , os: macos-latest , dependencies: "-minimal"     , options: ""             }
           - { name: "withWX"     , os: macos-latest , dependencies: "-smb-nfs-neon", options: "-DUSEWX=yes"  }
           - { name: "noWX"       , os: macos-latest , dependencies: "-smb-nfs-neon", options: "-DUSEWX=no"   }
-          - { name: "withPYTHON" , os: macos-latest , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
+          #- { name: "withPYTHON" , os: macos-latest , dependencies: "-smb-nfs-neon", options: "-DPYTHON=yes" }
 
+    #if: ${{ matrix.job.name }} != 'withPYTHON' || ${{ inputs.withPYTHON }}
     steps:
     - uses: deep-soft/checkout@v3
 
@@ -151,6 +160,26 @@ jobs:
       run: |
         bash bins/sed-stuff.sh "_" "${{ inputs.SED_STUFF_PARAMS }}"
 
+# change sprintf with snprintf - NOT working, different parameters
+#    - name: macos sprintf to snprintf
+#      if: ${{ inputs.sprintf }}
+#      continue-on-error: true
+#      shell: bash
+#      run: |
+#        if [[ ${{ matrix.job.os }} =~ "macos" ]]; then
+#          echo "macos sprintf to snprintf"
+#          f_found=$(grep -rl --exclude-dir=.git --exclude=Cargo.* --exclude=*.lock "sprintf" . | tr '\r' ' ' | tr '\n' ' ')
+#          if [ ${#f_found} -ge 2 ]; then
+#            #echo "f_found=$f_found";
+#            echo ":f_found:"
+#            printf '@(_%s_)\r\n' $f_found;
+#            $SED_EXE -ibak 's!sprintf!snprintf!g' $f_found;
+#            echo ":f_found_2:"
+#            f_found_2=$(grep -rl --exclude-dir=.git --exclude=Cargo.* --exclude=*.lock "sprintf" . | tr '\r' ' ' | tr '\n' ' ')
+#            printf '@(_%s_)\r\n' $f_found_2;
+#          fi
+#        fi
+
     - name: extra plugins
       if: ${{ inputs.PLUGINS_EXTRA }}
       shell: bash
@@ -209,11 +238,14 @@ jobs:
         # echo "libneon*-dev" >> dependencies-smb-nfs-neon.txt
 
     - name: Dependencies
+      continue-on-error: true
       run: |
         if [[ ${{ matrix.job.os }} =~ "macos" ]]; then
           brew bundle -v
           export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$(brew --prefix)/opt/openssl/lib/pkgconfig:$(brew --prefix)/opt/libarchive/lib/pkgconfig"
           echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH" >> $GITHUB_ENV
+          brew install libxau tree
+          ls /opt/homebrew/Cellar/libxau/1.0.11/lib/libXau* || true;
         else
           sudo apt-get update ; sudo apt-get -y install $(cat dependencies${{ matrix.job.dependencies }}.txt)
         fi
@@ -240,6 +272,7 @@ jobs:
       run: cmake --build . --config $BUILD_TYPE
 
     - name: Remove extra languages
+      continue-on-error: true
       working-directory: ${{github.workspace}}/build
       shell: bash
       run: |
@@ -267,6 +300,7 @@ jobs:
         fi
 
     - name: File Tree
+      continue-on-error: true
       working-directory: ${{github.workspace}}/build
       shell: bash
       run: tree
@@ -278,6 +312,7 @@ jobs:
 #        path: ${{github.workspace}}/build/install
 
     - name: Archive Release
+      continue-on-error: true
       uses: deep-soft/zip-release@v2
       with:
         type: 'zip'
