@@ -201,10 +201,10 @@ jobs:
 
           if [[ ${{ matrix.job.os }} =~ "macos" ]]; then
             extra_plugin_list='netcfgplugin sqlplugin';
-            extra_plugin_list2='EditWrap farcmds';
+            extra_plugin_list2='EditWrap';
           else
             extra_plugin_list='netcfgplugin sqlplugin processes';
-            extra_plugin_list2='EditWrap jumpword farcmds';
+            extra_plugin_list2='EditWrap jumpword';
           fi
           # add new extra plugins
           for plug in $extra_plugins_list ; do
