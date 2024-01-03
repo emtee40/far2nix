@@ -140,6 +140,8 @@ typedef struct _CHAR_INFO    CHAR_INFO;
 #endif
 
 typedef int FarLangMsgID;
+typedef uint32_t FarKey;
+
 #define FARLANGMSGID_BAD ((FarLangMsgID)-1)
 
 #define CP_AUTODETECT ((UINT)-1)
@@ -1789,7 +1791,7 @@ struct EditorColor
 	int StringNumber;
 	int ColorItem;
 	int StartPos;
-	int EndPos;
+	int EndPos; // -1 means edge of visible screen part, otherwise wanted edge position
 	int Color;
 };
 
@@ -1881,7 +1883,7 @@ typedef int (WINAPI *FARSTDGETPATHROOT)(const wchar_t *Path,wchar_t *Root, int D
 typedef BOOL (WINAPI *FARSTDADDENDSLASH)(wchar_t *Path);
 typedef int (WINAPI *FARSTDCOPYTOCLIPBOARD)(const wchar_t *Data);
 typedef wchar_t *(WINAPI *FARSTDPASTEFROMCLIPBOARD)(void);
-typedef int (WINAPI *FARSTDINPUTRECORDTOKEY)(const INPUT_RECORD *r);
+typedef FarKey (WINAPI *FARSTDINPUTRECORDTOKEY)(const INPUT_RECORD *r);
 typedef int (WINAPI *FARSTDLOCALISLOWER)(wchar_t Ch);
 typedef int (WINAPI *FARSTDLOCALISUPPER)(wchar_t Ch);
 typedef int (WINAPI *FARSTDLOCALISALPHA)(wchar_t Ch);
@@ -1915,11 +1917,11 @@ enum XLATMODE
 	XLAT_CONVERTALLCMDLINE = 0x00010000UL, // deprecated
 };
 
-typedef size_t (WINAPI *FARSTDKEYTOKEYNAME)(int Key,wchar_t *KeyText,size_t Size);
+typedef size_t (WINAPI *FARSTDKEYTOKEYNAME)(FarKey Key,wchar_t *KeyText,size_t Size);
 
 typedef wchar_t*(WINAPI *FARSTDXLAT)(wchar_t *Line,int StartPos,int EndPos,DWORD Flags);
 
-typedef int (WINAPI *FARSTDKEYNAMETOKEY)(const wchar_t *Name);
+typedef FarKey (WINAPI *FARSTDKEYNAMETOKEY)(const wchar_t *Name);
 
 typedef int (WINAPI *FRSUSERFUNC)(
 	const struct FAR_FIND_DATA *FData,
