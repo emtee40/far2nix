@@ -527,8 +527,12 @@ void FileViewer::ShowStatus()
 	FS << fmt::Cells() << fmt::LeftAlign() << fmt::Size(View.Width + (View.ViOpt.ShowScrollbar ? 1 : 0))
 		<< strStatus;
 
-	if (Opt.ViewerEditorClock && IsFullScreen())
+	if (Opt.ViewerEditorClock && IsFullScreen()) {
+		if (X2 > 5) {
+			Text(X2 - 5, Y1, COL_VIEWERTEXT, L" ");
+		}
 		ShowTime(FALSE);
+	}
 }
 
 void FileViewer::OnChangeFocus(int focus)
