@@ -65,8 +65,12 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vtshell.h"
 #include "ConfigRW.hpp"
 #include "AllXLats.hpp"
+#include "ConfigOpt.hpp"
+#include "ConfigOptSaveLoad.hpp"
 
 void SanitizeHistoryCounts();
+
+static bool g_config_ready = false;
 
 // Стандартный набор разделителей
 static constexpr const wchar_t *WordDiv0 = L"~!%^&*()+|{}:\"<>?`-=\\[];',./";
@@ -76,6 +80,7 @@ static constexpr const wchar_t *WordDivForXlat0 = L" \t!#$%^&*()+|=\\/@?";
 
 static constexpr const wchar_t *szCtrlDot = L"Ctrl.";
 static constexpr const wchar_t *szCtrlShiftDot = L"CtrlShift.";
+
 
 // Section
 static constexpr const char *NSecColors = "Colors";
@@ -112,549 +117,8 @@ static constexpr const char *NParamHistoryCount = "HistoryCount";
 static constexpr const char *NSecVMenu = "VMenu";
 
 static FARString strKeyNameConsoleDetachKey;
-static bool g_config_ready = false;
 
-static constexpr class OptSerializer
-{
-	const char *_section;
-	const char *_key;
-	WORD  _bin_size;  // used only with _type == T_BIN
-	bool  _save;   // =true - будет записываться в SaveConfig()
-
-	enum T
-	{
-		T_STR = 0,
-		T_BIN,
-		T_DWORD,
-		T_INT,
-		T_BOOL
-	} _type : 8;
-
-	union V
-	{
-		FARString *str;
-		BYTE *bin;
-		DWORD *dw;
-		int *i;
-		bool *b;
-	} _value;
-
-	union D
-	{
-		const wchar_t *str;
-		const BYTE *bin;
-		DWORD dw;
-		int i;
-		bool b;
-	} _default;
-
-public:
-	constexpr OptSerializer(bool save, const char *section, const char *key, WORD size, BYTE *data_bin, const BYTE *def_bin)
-		: _section{section}, _key{key}, _bin_size{size}, _save{save},
-		_type{T_BIN}, _value{.bin = data_bin}, _default{.bin = def_bin}
-	{ }
-
-	constexpr OptSerializer(bool save, const char *section, const char *key, FARString *data_str, const wchar_t *def_str)
-		: _section{section}, _key{key}, _bin_size{0}, _save{save},
-		_type{T_STR}, _value{.str = data_str}, _default{.str = def_str}
-	{ }
-
-	constexpr OptSerializer(bool save, const char *section, const char *key, DWORD *data_dw, DWORD def_dw)
-		: _section{section}, _key{key}, _bin_size{0}, _save{save},
-		_type{T_DWORD}, _value{.dw = data_dw}, _default{.dw = def_dw}
-	{ }
-
-	constexpr OptSerializer(bool save, const char *section, const char *key, int *data_i, int def_i)
-		: _section{section}, _key{key}, _bin_size{0}, _save{save},
-		_type{T_INT}, _value{.i = data_i}, _default{.i = def_i}
-	{ }
-
-	constexpr OptSerializer(bool save, const char *section, const char *key, bool *data_b, bool def_b)
-		: _section{section}, _key{key}, _bin_size{0}, _save{save},
-		_type{T_BOOL}, _value{.b = data_b}, _default{.b = def_b}
-	{ }
-
-	void Load(ConfigReader &cfg_reader) const
-	{
-		cfg_reader.SelectSection(_section);
-		switch (_type)
-		{
-			case T_INT:
-				*_value.i = cfg_reader.GetInt(_key, _default.i);
-				break;
-			case T_DWORD:
-				*_value.dw = cfg_reader.GetUInt(_key, _default.dw);
-				break;
-			case T_BOOL:
-				*_value.b = cfg_reader.GetInt(_key, _default.b ? 1 : 0) != 0;
-				break;
-			case T_STR:
-				*_value.str = cfg_reader.GetString(_key, _default.str);
-				break;
-			case T_BIN:
-				{
-					const size_t Size = cfg_reader.GetBytes(_value.bin, _bin_size, _key, _default.bin);
-					if (Size < (size_t)_bin_size)
-						memset(_value.bin + Size, 0, (size_t)_bin_size - Size);
-				}
-				break;
-		}
-	}
-
-	void Save(ConfigWriter &cfg_writer) const
-	{
-		if (!_save)
-			return;
-
-		cfg_writer.SelectSection(_section);
-		switch (_type)
-		{
-			case T_BOOL:
-				cfg_writer.SetInt(_key, *_value.b ? 1 : 0);
-				break;
-			case T_INT:
-				cfg_writer.SetInt(_key, *_value.i);
-				break;
-			case T_DWORD:
-				cfg_writer.SetUInt(_key, *_value.dw);
-				break;
-			case T_STR:
-				cfg_writer.SetString(_key, _value.str->CPtr());
-				break;
-			case T_BIN:
-				cfg_writer.SetBytes(_key, _value.bin, _bin_size);
-				break;
-		}
-	}
-
-	//  0 - is default
-	//  1 - not default
-	// -1 - error or has not default
-	int IsNotDefault() const
-	{
-		switch (_type)
-		{
-			case T_BOOL:
-				return (*_value.b != _default.b);
-			case T_INT:
-				return (*_value.i != _default.i);
-			case T_DWORD:
-				return (*_value.dw != _default.dw);
-			case T_STR:
-				return (*_value.str != _default.str);
-			case T_BIN:
-				return (_default.bin == nullptr || _value.bin == nullptr ? -1
-						: ( memcmp(_value.bin, _default.bin, _bin_size) == 0 ? 0 : 1 ));
-			default:
-				return -1; // can not process unknown type
-		}
-	}
-
-	// 0 - was default, not changed
-	// 1 - changed to default
-	// -1 - error or has not default
-	int ToDefault() const
-	{
-		switch (_type)
-		{
-			case T_BOOL:
-				if (*_value.b == _default.b)
-					return 0;
-				*_value.b = _default.b;
-				return 1;
-			case T_INT:
-				if (*_value.i == _default.i)
-					return 0;
-				*_value.i = _default.i;
-				return 1;
-			case T_DWORD:
-				if (*_value.dw == _default.dw)
-					return 0;
-				*_value.dw = _default.dw;
-				return 1;
-			case T_STR:
-				if (*_value.str == _default.str)
-					return 0;
-				*_value.str = _default.str;
-				return 1;
-			case T_BIN:
-				return -1; // can not process binary
-			default:
-				return -1; // can not process unknown type
-		}
-	}
-
-	void GetMaxLengthSectKeys(size_t &len_sections, size_t &len_keys, size_t &len_sections_keys) const
-	{
-		size_t tmp1, tmp2;
-		tmp1 = strlen(_section);
-		if (tmp1 > len_sections )
-			len_sections = tmp1;
-		tmp2 = strlen(_key);
-		if (tmp2 > len_keys )
-			len_keys = tmp2;
-		tmp1 += 1 + tmp2;
-		if (tmp1 > len_sections_keys )
-			len_sections_keys = tmp1;
-	}
-
-	void MenuListAppend(VMenu &vm,
-					size_t len_sections, size_t len_keys, size_t len_sections_keys,
-					bool hide_unchanged, bool align_dot,
-					int update_id = -1) const
-	{
-		MenuItemEx mi;
-		FARString fsn;
-		if (align_dot)
-		 fsn.Format(L"%*s.%-*s", len_sections, _section, len_keys, _key);
-		else {
-			mi.strName.Format(L"%s.%s", _section, _key);
-			fsn.Format(L"%-*ls", len_sections_keys, mi.strName.CPtr());
-		}
-		switch (_type)
-		{
-			case T_BOOL:
-				mi.strName.Format(L"%s %ls |  bool|%s", (*_value.b == _default.b ? " " : "*"), fsn.CPtr(), (*_value.b ? "true" : "false"));
-				break;
-			case T_INT:
-				mi.strName.Format(L"%s %ls |   int|%ld = 0x%lx", (*_value.i == _default.i ? " " : "*"), fsn.CPtr(), *_value.i, *_value.i);
-				break;
-			case T_DWORD:
-				mi.strName.Format(L"%s %ls | dword|%lu = 0x%lx", (*_value.dw == _default.dw ? " " : "*"), fsn.CPtr(), *_value.dw, *_value.dw);
-				break;
-			case T_STR:
-				mi.strName.Format(L"%s %ls |string|%ls", (*_value.str == _default.str ? " " : "*"), fsn.CPtr(), _value.str->CPtr());
-				break;
-			case T_BIN:
-				mi.strName.Format(L"%s %ls |binary|(binary has length %u bytes)",
-					(_default.bin == nullptr || _value.bin == nullptr ? "?"
-						: ( memcmp(_value.bin, _default.bin, _bin_size) == 0 ? " " : "*")),
-					fsn.CPtr(), _bin_size );
-				break;
-			default:
-				mi.strName.Format(L"? %ls |unknown type ???", fsn.CPtr());
-		}
-		if (update_id < 0) {
-			if (hide_unchanged && mi.strName.At(0)==L' ') // no hide after change item to default value
-				mi.Flags |= LIF_HIDDEN;
-			vm.AddItem(&mi);
-		}
-		else {
-			vm.DeleteItem(update_id);
-			vm.AddItem(&mi, update_id);
-			vm.SetSelectPos(update_id, 0);
-		}
-	}
-
-	int Msg(const wchar_t *title) const
-	{
-		const char *type_psz;
-		FARString def_str, val_str;
-		switch (_type) {
-			case T_BOOL:
-				type_psz = "bool";
-				def_str = _default.b ? L"true" : L"false";
-				val_str = (*_value.b) ? L"true" : L"false";
-				break;
-			case T_INT:
-				type_psz = "int";
-				def_str.Format(L"%ld = 0x%lx", _default.i, _default.i);
-				val_str.Format(L"%ld = 0x%lx", *_value.i, *_value.i);
-				break;
-			case T_DWORD:
-				type_psz = "dword";
-				def_str.Format(L"%lu = 0x%lx", _default.dw, _default.dw);
-				val_str.Format(L"%lu = 0x%lx", *_value.dw, *_value.dw);
-				break;
-			case T_STR:
-				type_psz = "string";
-				def_str = _default.str ? _default.str : L"(null)";
-				val_str = *_value.str;
-				break;
-			case T_BIN:
-				type_psz = "binary";
-				if (_default.bin) {
-					def_str.Format(L"(binary has length %u bytes)", _bin_size);
-				} else {
-					def_str = L"(no default value set)";
-				}
-				val_str.Format(L"(binary has length %u bytes)", _bin_size);
-				break;
-			default:
-				type_psz = "???";
-				def_str = L"???";
-				val_str = L"???";
-		}
-
-		ExMessager em;
-		em.AddFormat(L"%ls - %s.%s", title, _section, _key);
-		em.AddFormat(L"        Section: %s", _section);
-		em.AddFormat(L"            Key: %s", _key);
-		em.AddFormat(L" to config file: %s", (_save ? "saved" : "never"));
-		em.AddFormat(L"           Type: %s", type_psz);
-		em.AddFormat(L"  Default value: %ls", def_str.CPtr());
-		em.AddFormat(L"  Current value: %ls", val_str.CPtr());
-		if (IsNotDefault()==1) {
-			em.Add(L"");
-			em.Add(L"Note: some panel parameters after update/reset");
-			em.Add(L"      not applied immediatly in FAR2L");
-			em.Add(L"      and need relaunch feature");
-			em.Add(L"      or may be need save config & restart FAR2L");
-		}
-		em.Add(L"Continue");
-		SetMessageHelp(L"SpecCmd");//L"FarConfig");
-		if (IsNotDefault()==1) {
-			em.Add(L"Reset to default");
-			return em.Show(MSG_LEFTALIGN, 2);
-		}
-		return em.Show(MSG_LEFTALIGN, 1);
-	}
-
-	static LONG_PTR WINAPI EditDlgDlgProc(HANDLE hDlg, int Msg, int Param1, LONG_PTR Param2)
-	{
-		if (Msg == DN_BTNCLICK) {
-			if ( Param1 == 32 && !SendDlgMessage(hDlg, DM_ENABLE, 29, -1) ) { // to decimal
-				SendDlgMessage(hDlg, DM_ENABLE, 29, TRUE);
-				SendDlgMessage(hDlg, DM_ENABLE, 31, FALSE);
-			}
-			else if ( Param1 == 33 && !SendDlgMessage(hDlg, DM_ENABLE, 31, -1) ) { // to hex
-				SendDlgMessage(hDlg, DM_ENABLE, 29, FALSE);
-				SendDlgMessage(hDlg, DM_ENABLE, 31, TRUE);
-			}
-		}
-
-		return DefDlgProc(hDlg, Msg, Param1, Param2);
-	}
-
-	bool EditDlg(const wchar_t *title) const
-	{
-		bool is_editable = false, is_def = true;
-		const wchar_t *type_pwsz;
-		FARString fs_title,
-				def_str, cur_str, new_str, def_str_hex, cur_str_hex, new_str_hex,
-				fs_section = _section, fs_key = _key;
-		fs_title.Format(L"%ls - %s.%s", title, _section, _key);
-
-		switch (_type) {
-			case T_BOOL:
-				type_pwsz = L"bool";
-				is_editable = true;
-				break;
-			case T_INT:
-				type_pwsz = L"int";
-				is_editable = true;
-				def_str.Format(L"%ld", _default.i);
-				cur_str.Format(L"%ld", *_value.i);
-				def_str_hex.Format(L"%lx", _default.i);
-				cur_str_hex.Format(L"%lx", *_value.i);
-				new_str = cur_str;
-				new_str_hex = cur_str_hex;
-				break;
-			case T_DWORD:
-				type_pwsz = L"dword";
-				is_editable = true;
-				def_str.Format(L"%lu", _default.dw);
-				cur_str.Format(L"%lu", *_value.dw);
-				def_str_hex.Format(L"%lx", _default.dw);
-				cur_str_hex.Format(L"%lx", *_value.dw);
-				new_str = cur_str;
-				new_str_hex = cur_str_hex;
-				break;
-			case T_STR:
-				type_pwsz = L"string";
-				is_editable = true;
-				is_def = (bool) _default.str;
-				def_str = _default.str ? _default.str : L"";
-				cur_str = *_value.str;
-				new_str = cur_str;
-				break;
-			case T_BIN:
-				type_pwsz = L"binary";
-				if (_default.bin) {
-					def_str.Format(L"(binary has length %u bytes)", _bin_size);
-				} else {
-					is_def = false;
-					def_str = L"(no default value set)";
-				}
-				cur_str.Format(L"(binary has length %u bytes)", _bin_size);
-				new_str	= L"(can not process binary)";
-				break;
-			default:
-				type_pwsz = L"???";
-				def_str = L"???";
-				cur_str = L"???";
-				new_str	= L"(can not process unknown type)";
-		}
-
-		const short DLG_HEIGHT = 20, DLG_WIDTH = 76;
-		const wchar_t *mask_int = L"#9999999999";
-		const wchar_t *mask_dword = L"9999999999";
-		const wchar_t *HexMask = L"HHHHHHHH";
-		DialogDataEx AdvancedConfigDlgData[] = {
-			/*   0 */ {DI_DOUBLEBOX,	 3,  1, DLG_WIDTH - 4, DLG_HEIGHT - 2, {}, 0, fs_title.CPtr()},
-			/*   1 */ {DI_TEXT,			 5,  2, 20,             2, {}, 0, L"       Section:"},
-			/*   2 */ {DI_TEXT,			21,  2, DLG_WIDTH - 6,  2, {}, 0, fs_section.CPtr()},
-			/*   3 */ {DI_TEXT,			 5,  3, 20,             3, {}, 0, L"           Key:"},
-			/*   4 */ {DI_TEXT,			21,  3, DLG_WIDTH - 6,  3, {}, 0, fs_key.CPtr()},
-			/*   5 */ {DI_TEXT,			 5,  4, 20,             4, {}, 0, L"to config file:"},
-			/*   6 */ {DI_TEXT,			21,  4, DLG_WIDTH - 6,  4, {}, 0, (_save ? L"saved" : L"never")},
-			/*   7 */ {DI_TEXT,			 5,  5, 20,             5, {}, 0, L"          Type:"},
-			/*   8 */ {DI_TEXT,			21,  5, DLG_WIDTH - 6,  5, {}, 0, type_pwsz},
-			/*   9 */ {DI_TEXT,			 3,  6, 20,             6, {}, DIF_SEPARATOR, L" Values "},
-			/*  10 */ {DI_TEXT,			 5,  7, 13,             7, {}, 0, L"Default:"},
-			/*  11 */ {DI_RADIOBUTTON,	14,  7,  0,             7, {}, DIF_DISABLE | DIF_GROUP, L"false"},
-			/*  12 */ {DI_RADIOBUTTON,	29,  7,  0,             7, {}, DIF_DISABLE, L"true"},
-			/*  13 */ {DI_TEXT,			14,  7, 21,             7, {}, 0, L"Decimal="},
-			/*  14 */ {DI_EDIT,			22,  7, 32,             7, {}, DIF_READONLY | DIF_SELECTONENTRY, def_str.CPtr()},
-			/*  15 */ {DI_TEXT,			35,  7, 40,             7, {}, 0, L"Hex=0x"},
-			/*  16 */ {DI_EDIT,			41,  7, 49,             7, {}, DIF_READONLY | DIF_SELECTONENTRY, def_str_hex.CPtr()},
-			/*  17 */ {DI_TEXT,			 5,  8, 13,             8, {}, 0, L"Current:"},
-			/*  18 */ {DI_RADIOBUTTON,	14,  8,  0,             8, {}, DIF_DISABLE | DIF_GROUP, L"false"},
-			/*  19 */ {DI_RADIOBUTTON,	29,  8,  0,             8, {}, DIF_DISABLE, L"true"},
-			/*  20 */ {DI_TEXT,			14,  8, 21,             8, {}, 0, L"Decimal="},
-			/*  21 */ {DI_EDIT,			22,  8, 32,             8, {}, DIF_READONLY | DIF_SELECTONENTRY, cur_str.CPtr()},
-			/*  22 */ {DI_TEXT,			35,  8, 40,             8, {}, 0, L"Hex=0x"},
-			/*  23 */ {DI_EDIT,			41,  8, 49,             8, {}, DIF_READONLY | DIF_SELECTONENTRY, cur_str_hex.CPtr()},
-			/*  24 */ {DI_TEXT,			 3,  9, 20,             9, {}, DIF_SEPARATOR, L" New value "},
-			/*  25 */ {DI_TEXT,			 5, 10, 13,            10, {}, (is_editable ? 0 : DIF_DISABLE), L"    New:"},
-			/*  26 */ {DI_RADIOBUTTON,	14, 10, 14,            10, {}, (is_editable ? DIF_FOCUS : DIF_DISABLE) | DIF_GROUP, L"false"},
-			/*  27 */ {DI_RADIOBUTTON,	29, 10, 14,            10, {}, (is_editable ? 0 : DIF_DISABLE), L"true"},
-			/*  28 */ {DI_TEXT,			14, 10, 21,            10, {}, 0, L"Decimal="},
-			/*  29 */ {DI_EDIT,			22, 10, 32,            10, {}, (is_editable ? DIF_FOCUS : DIF_DISABLE) | DIF_SELECTONENTRY, new_str.CPtr()},
-			/*  30 */ {DI_TEXT,			35, 10, 40,            10, {}, 0, L"Hex=0x"},
-			/*  31 */ {DI_FIXEDIT,		41, 10, 49,            10, {(DWORD_PTR)HexMask}, DIF_MASKEDIT | DIF_DISABLE | DIF_SELECTONENTRY, new_str_hex.CPtr()},
-			/*  32 */ {DI_RADIOBUTTON,	51, 10, 58,            10, {1}, (is_editable ? 0 : DIF_DISABLE) | DIF_GROUP, L"dec"},
-			/*  33 */ {DI_RADIOBUTTON,	59, 10, 65,            10, {}, (is_editable ? 0 : DIF_DISABLE), L"hex"},
-			/*  34 */ {DI_TEXT,		3, 11, 20,            11, {}, DIF_SEPARATOR, L""},
-			/*  35 */ {DI_TEXT,		5, 12, DLG_WIDTH - 6, 12, {}, DIF_SHOWAMPERSAND, L"Note: some panel parameters after update/reset"},
-			/*  36 */ {DI_TEXT,		5, 13, DLG_WIDTH - 6, 13, {}, DIF_SHOWAMPERSAND, L"      not applied immediatly in FAR2L"},
-			/*  37 */ {DI_TEXT,		5, 14, DLG_WIDTH - 6, 14, {}, DIF_SHOWAMPERSAND, L"      and need relaunch feature"},
-			/*  38 */ {DI_TEXT,		5, 15, DLG_WIDTH - 6, 15, {}, DIF_SHOWAMPERSAND, L"      or may be need save config & restart FAR2L"},
-			/*  39 */ {DI_TEXT,		3, 16, 20, 16, {}, DIF_SEPARATOR, L""},
-			/*  40 */ {DI_BUTTON,	0, 17, 0,  17, {}, DIF_DEFAULT | DIF_CENTERGROUP | (is_editable ? 0 : DIF_DISABLE), Msg::Change},
-			/*  41 */ {DI_BUTTON,	0, 17, 0,  17, {}, DIF_CENTERGROUP | (is_editable ? 0 : DIF_FOCUS), Msg::Cancel}
-		};
-		if (!is_def) {
-			AdvancedConfigDlgData[10].Flags	|= DIF_DISABLE;
-			AdvancedConfigDlgData[11].Flags	|= DIF_DISABLE;
-			AdvancedConfigDlgData[12].Flags	|= DIF_DISABLE;
-			AdvancedConfigDlgData[13].Flags	|= DIF_DISABLE;
-			AdvancedConfigDlgData[14].Flags	|= DIF_DISABLE;
-			AdvancedConfigDlgData[15].Flags	|= DIF_DISABLE;
-			AdvancedConfigDlgData[16].Flags	|= DIF_DISABLE;
-		}
-		if (_type == T_BOOL) {
-			AdvancedConfigDlgData[_default.b ? 12 : 11].Selected = 1;
-			AdvancedConfigDlgData[(*_value.b) ? 19 : 18].Selected = 1;
-			AdvancedConfigDlgData[(*_value.b) ? 27 : 26].Selected = 1;
-			AdvancedConfigDlgData[13].Flags =
-			AdvancedConfigDlgData[14].Flags =
-			AdvancedConfigDlgData[15].Flags =
-			AdvancedConfigDlgData[16].Flags =
-			AdvancedConfigDlgData[20].Flags =
-			AdvancedConfigDlgData[21].Flags =
-			AdvancedConfigDlgData[22].Flags =
-			AdvancedConfigDlgData[23].Flags =
-			AdvancedConfigDlgData[28].Flags =
-			AdvancedConfigDlgData[29].Flags =
-			AdvancedConfigDlgData[30].Flags =
-			AdvancedConfigDlgData[31].Flags =
-			AdvancedConfigDlgData[32].Flags =
-			AdvancedConfigDlgData[33].Flags = DIF_HIDDEN;
-		}
-		else {
-			AdvancedConfigDlgData[11].Flags	=
-			AdvancedConfigDlgData[12].Flags	=
-			AdvancedConfigDlgData[18].Flags =
-			AdvancedConfigDlgData[19].Flags =
-			AdvancedConfigDlgData[26].Flags =
-			AdvancedConfigDlgData[27].Flags	= DIF_HIDDEN;
-			if (_type==T_DWORD) {
-				AdvancedConfigDlgData[29].Type = DI_FIXEDIT;
-				AdvancedConfigDlgData[29].Flags |= DIF_MASKEDIT;
-				AdvancedConfigDlgData[29].Mask = mask_dword;
-			}
-			else if (_type==T_INT) {
-				AdvancedConfigDlgData[29].Type = DI_FIXEDIT;
-				AdvancedConfigDlgData[29].Flags |= DIF_MASKEDIT;
-				AdvancedConfigDlgData[29].Mask = mask_int;
-			}
-			else { // T_STR & T_BIN
-				AdvancedConfigDlgData[14].X1 = AdvancedConfigDlgData[21].X1 = AdvancedConfigDlgData[29].X1 = 14;
-				AdvancedConfigDlgData[14].X2 = AdvancedConfigDlgData[21].X2 = AdvancedConfigDlgData[29].X2 = DLG_WIDTH - 6;
-				AdvancedConfigDlgData[13].Flags =
-				AdvancedConfigDlgData[15].Flags =
-				AdvancedConfigDlgData[16].Flags =
-				AdvancedConfigDlgData[20].Flags =
-				AdvancedConfigDlgData[22].Flags =
-				AdvancedConfigDlgData[23].Flags =
-				AdvancedConfigDlgData[28].Flags =
-				AdvancedConfigDlgData[30].Flags =
-				AdvancedConfigDlgData[31].Flags =
-				AdvancedConfigDlgData[32].Flags =
-				AdvancedConfigDlgData[33].Flags = DIF_HIDDEN;
-			}
-		}
-		MakeDialogItemsEx(AdvancedConfigDlgData, AdvancedConfigDlg);
-		Dialog Dlg(AdvancedConfigDlg, ARRAYSIZE(AdvancedConfigDlg), EditDlgDlgProc);
-		Dlg.SetPosition(-1, -1, DLG_WIDTH, DLG_HEIGHT);
-		Dlg.SetHelp(L"SpecCmd");//L"FarConfig");
-		Dlg.Process();
-
-		if (Dlg.GetExitCode() == 40) {
-			switch (_type) {
-				case T_BOOL:
-					if (*_value.b != (bool) AdvancedConfigDlg[27].Selected ) {
-						*_value.b = (bool) AdvancedConfigDlg[27].Selected;
-						return true;
-					}
-					return false;
-				case T_INT:
-					{
-						int from_edit, base, i;
-						wchar_t *endptr;
-						if ( AdvancedConfigDlg[32].Selected )
-							from_edit = 29, base = 10; // decimal
-						else
-							from_edit = 31, base = 16; // decimal
-						i = (int) wcstol(AdvancedConfigDlg[from_edit].strData.CPtr(), &endptr, base);
-						if (AdvancedConfigDlg[from_edit].strData.CPtr() != endptr && *_value.i != i) {
-							*_value.i = i;
-							return true;
-						}
-					}
-					return false;
-				case T_DWORD:
-					{
-						int from_edit, base;
-						DWORD dw;
-						wchar_t *endptr;
-						if ( AdvancedConfigDlg[32].Selected )
-							from_edit = 29, base = 10; // decimal
-						else
-							from_edit = 31, base = 16; // decimal
-						dw = (DWORD) wcstoul(AdvancedConfigDlg[from_edit].strData.CPtr(), &endptr, base);
-						if (AdvancedConfigDlg[from_edit].strData.CPtr() != endptr && *_value.dw != dw) {
-							*_value.dw = dw;
-							return true;
-						}
-					}
-					return false;
-				case T_STR:
-					if (AdvancedConfigDlg[29].strData != cur_str) {
-						*_value.str = AdvancedConfigDlg[29].strData.CPtr();
-						return true;
-					}
-					return false;
-				case T_BIN: // TODO
-					return false;
-			}
-		}
-		return false;
-	}
-
-} s_opt_serializers[] =
-{
+const ConfigOpt g_cfg_opts[] = {
 	{true,  NSecColors, "CurrentPalette", SIZE_ARRAY_PALETTE, Palette, DefaultPalette},
 
 	{true,  NSecScreen, "Clock", &Opt.Clock, 1},
@@ -971,9 +435,73 @@ public:
 	{true,  NSecVMenu, "RBtnClick", &Opt.VMenu.RBtnClick, VMENUCLICK_CANCEL},
 	{true,  NSecVMenu, "MBtnClick", &Opt.VMenu.MBtnClick, VMENUCLICK_APPLY},
 	{true,  NSecVMenu, "HistShowTimes", ARRAYSIZE(Opt.HistoryShowTimes), Opt.HistoryShowTimes, nullptr},
+	{}
 };
 
-///////////////////////////////////////////////////////////////////////////////////////
+//////////
+
+struct OptConfigReader : ConfigReader
+{
+	void LoadOpt(const ConfigOpt &opt)
+	{
+		SelectSection(opt.section);
+		switch (opt.type)
+		{
+			case ConfigOpt::T_INT:
+				*opt.value.i = GetInt(opt.key, opt.def.i);
+				break;
+			case ConfigOpt::T_DWORD:
+				*opt.value.dw = GetUInt(opt.key, opt.def.dw);
+				break;
+			case ConfigOpt::T_BOOL:
+				*opt.value.b = GetInt(opt.key, opt.def.b ? 1 : 0) != 0;
+				break;
+			case ConfigOpt::T_STR:
+				*opt.value.str = GetString(opt.key, opt.def.str);
+				break;
+			case ConfigOpt::T_BIN:
+				{
+					const size_t Size = GetBytes(opt.value.bin, opt.bin_size, opt.key, opt.def.bin);
+					if (Size < (size_t)opt.bin_size)
+						memset(opt.value.bin + Size, 0, (size_t)opt.bin_size - Size);
+				}
+				break;
+			default:
+				ABORT_MSG("Wrong option type: %u", opt.type);
+		}
+	}
+};
+
+struct OptConfigWriter : ConfigWriter
+{
+	void SaveOpt(const ConfigOpt &opt)
+	{
+		if (!opt.save)
+			return;
+
+		SelectSection(opt.section);
+		switch (opt.type)
+		{
+			case ConfigOpt::T_BOOL:
+				SetInt(opt.key, *opt.value.b ? 1 : 0);
+				break;
+			case ConfigOpt::T_INT:
+				SetInt(opt.key, *opt.value.i);
+				break;
+			case ConfigOpt::T_DWORD:
+				SetUInt(opt.key, *opt.value.dw);
+				break;
+			case ConfigOpt::T_STR:
+				SetString(opt.key, opt.value.str->CPtr());
+				break;
+			case ConfigOpt::T_BIN:
+				SetBytes(opt.key, opt.value.bin, opt.bin_size);
+				break;
+			default:
+				ABORT_MSG("Wrong option type: %u", opt.type);
+		}
+	}
+};
 
 static void SanitizeXlat()
 {
@@ -1019,15 +547,15 @@ static void SanitizePalette()
 	}
 }
 
-void LoadConfig()
+void ConfigOptLoad()
 {
-	ConfigReader cfg_reader;
+	OptConfigReader cfg_reader;
 
 	/* <ПРЕПРОЦЕССЫ> *************************************************** */
 	//Opt.LCIDSort=LOCALE_USER_DEFAULT; // проинициализируем на всякий случай
 	/* *************************************************** </ПРЕПРОЦЕССЫ> */
-	for (const auto &opt_ser : s_opt_serializers)
-		opt_ser.Load(cfg_reader);
+	for (size_t i = 0; g_cfg_opts[i].Valid(); ++i)
+		cfg_reader.LoadOpt(g_cfg_opts[i]);
 
 	/* <ПОСТПРОЦЕССЫ> *************************************************** */
 
@@ -1098,12 +626,12 @@ void LoadConfig()
 	/* *************************************************** </ПОСТПРОЦЕССЫ> */
 }
 
-void AssertConfigLoaded()
+void ConfigOptAssertLoaded()
 {
 	ASSERT(g_config_ready);
 }
 
-void SaveConfig(int Ask)
+void ConfigOptSave(int Ask)
 {
 	if (Opt.Policies.DisabledOptions&0x20000) // Bit 17 - Сохранить параметры
 		return;
@@ -1155,9 +683,9 @@ void SaveConfig(int Ask)
 	CtrlObject->HiFiles->SaveHiData();
 	/* *************************************************** </ПРЕПРОЦЕССЫ> */
 
-	ConfigWriter cfg_writer;
-	for (const auto &opt_ser : s_opt_serializers)
-		opt_ser.Save(cfg_writer);
+	OptConfigWriter cfg_writer;
+	for (size_t i = 0; g_cfg_opts[i].Valid(); ++i)
+		cfg_writer.SaveOpt(g_cfg_opts[i]);
 
 	/* <ПОСТПРОЦЕССЫ> *************************************************** */
 	FileFilter::SaveFilters(cfg_writer);
@@ -1167,96 +695,4 @@ void SaveConfig(int Ask)
 		CtrlObject->Macro.SaveMacros();
 
 	/* *************************************************** </ПОСТПРОЦЕССЫ> */
-}
-
-
-static FARString AdvancedConfigTitle(bool hide_unchanged = false)
-{
-	FARString title = L"far:config";
-	if (hide_unchanged) {
-		title+= L" *";
-	}
-	return title;
-}
-
-void AdvancedConfig()
-{
-	size_t len_sections = 0, len_keys = 0, len_sections_keys = 0;
-	bool hide_unchanged = false, align_dot = false;
-	int sel_pos = 0;
-
-	VMenu ListConfig(AdvancedConfigTitle(hide_unchanged), nullptr, 0, ScrY-4);
-	ListConfig.SetFlags(VMENU_SHOWAMPERSAND | VMENU_IGNORE_SINGLECLICK);
-	ListConfig.ClearFlags(VMENU_MOUSEREACTION);
-	//ListConfig.SetFlags(VMENU_WRAPMODE);
-	ListConfig.SetHelp(L"SpecCmd");//L"FarConfig");
-
-	ListConfig.SetBottomTitle(L"ESC or F10 - close, ENTER - edit, DEL - to default, Ctrl-Alt-F - filtering, Ctrl-H - changed/all, Ctrl-A - names left/dot");
-
-	for (const auto &opt_ser : s_opt_serializers)
-		opt_ser.GetMaxLengthSectKeys(len_sections, len_keys, len_sections_keys);
-	for (const auto &opt_ser : s_opt_serializers)
-		opt_ser.MenuListAppend(ListConfig, len_sections, len_keys, len_sections_keys, hide_unchanged, align_dot);
-
-	ListConfig.SetPosition(-1, -1, 0, 0);
-	//ListConfig.Process();
-	ListConfig.Show();
-	do {
-		while (!ListConfig.Done()) {
-			FarKey Key = ListConfig.ReadInput();
-			switch (Key) {
-				case KEY_CTRLH:
-					hide_unchanged = !hide_unchanged;
-					ListConfig.SetTitle(AdvancedConfigTitle(hide_unchanged));
-					break;
-				case KEY_CTRLA:
-					align_dot = !align_dot;
-					break;
-				case KEY_NUMDEL:
-				case KEY_DEL:
-					sel_pos = ListConfig.GetSelectPos();
-					if (sel_pos>=0 && s_opt_serializers[sel_pos].IsNotDefault()==1
-							&& s_opt_serializers[sel_pos].Msg(AdvancedConfigTitle())==1
-							&& s_opt_serializers[sel_pos].ToDefault()) {
-						s_opt_serializers[sel_pos].MenuListAppend(
-							ListConfig,
-							len_sections, len_keys, len_sections_keys,
-							hide_unchanged, align_dot,
-							sel_pos);
-						ListConfig.FastShow();
-					}
-					continue;
-				case KEY_ALTF4:
-				case KEY_SHIFTF4:
-				case KEY_F4:
-					ListConfig.ProcessKey(KEY_ENTER);
-					continue;
-				default:
-					ListConfig.ProcessInput();
-					continue;
-			}
-
-			// regenerate items in loop only if not was contunue
-			sel_pos = ListConfig.GetSelectPos();
-			ListConfig.DeleteItems();
-			for (const auto &opt_ser : s_opt_serializers)
-				opt_ser.MenuListAppend(ListConfig, len_sections, len_keys, len_sections_keys, hide_unchanged, align_dot);
-			ListConfig.SetSelectPos(sel_pos,0);
-			ListConfig.SetPosition(-1, -1, 0, 0);
-			ListConfig.Show();
-		}
-
-		sel_pos = ListConfig.GetExitCode();
-		if (sel_pos < 0) // exit from loop by ESC or F10 or click outside vmenu
-			break;
-		ListConfig.ClearDone(); // no close after select item by ENTER or dbl mouse click
-		if ( s_opt_serializers[sel_pos].EditDlg(AdvancedConfigTitle()) ) { // by ENTER - show edit dialog
-			s_opt_serializers[sel_pos].MenuListAppend( // if was change value then regenerate item
-				ListConfig,
-				len_sections, len_keys, len_sections_keys,
-				hide_unchanged, align_dot,
-				sel_pos);
-			ListConfig.FastShow();
-		}
-	} while(1);
 }
