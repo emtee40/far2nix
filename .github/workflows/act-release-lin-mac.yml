@@ -82,7 +82,7 @@ jobs:
 
     #if: ${{ matrix.job.name }} != 'withPYTHON' || ${{ inputs.withPYTHON }}
     steps:
-    - uses: deep-soft/checkout@v3
+    - uses: deep-soft/checkout@v4
 
     - name: get os version
       shell: bash
@@ -326,7 +326,7 @@ jobs:
 
     - name: Publish Release
       continue-on-error: true
-      uses: deep-soft/action-gh-release@v1
+      uses: deep-soft/action-gh-release@v2.1
       with:
         draft: true
         tag_name: ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}
@@ -353,7 +353,7 @@ jobs:
     - name: Publish Release - All
       if: ${{ inputs.make_archive_all }}
       continue-on-error: true
-      uses: deep-soft/action-gh-release@v1
+      uses: deep-soft/action-gh-release@v2.1
       with:
         draft: true
         tag_name: ${{ env.PROG_NAME }}-${{ env.PROG_VERSION }}-ALL
