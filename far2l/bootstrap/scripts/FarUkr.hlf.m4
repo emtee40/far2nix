@@ -4225,6 +4225,10 @@ $ #Переключення між екранами#
 екран, #Ctrl-Shift-Tab# на попередній, #F12# виводить список усіх доступних
 екрани.
 
+ Additionally there can be multiple terminal commands running in background.
+You may view or activate any of them also from #F12# menu: use F3 to view
+current command output or Enter to switch to it in terminal.
+
  Кількість фонових екранів редагування та перегляду відображається в
 верхньому лівому кутку лівої панелі. Ви можете заборонити показ кількості екранів,
 використовуючи діалог ~Налаштування панелі~@PanelSettings@.

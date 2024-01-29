@@ -27,6 +27,7 @@
 #include "dirmix.hpp"
 #include "vtansi.h"
 #include "vtlog.h"
+#include "vtshell.h"
 #include "VTFar2lExtensios.h"
 #include "InterThreadCall.hpp"
 #include "vtshell_compose.h"
@@ -86,6 +87,7 @@ class VTShell : VTOutputReader::IProcessor, VTInputReader::IProcessor, IVTShell
 {
 	HANDLE _console_handle = NULL;
 	std::atomic<bool> _console_switch_requested{false};
+	std::atomic<bool> _console_kill_requested{false};
 
 	VTAnsi _vta;
 	VTInputReader _input_reader;
@@ -126,11 +128,6 @@ class VTShell : VTOutputReader::IProcessor, VTInputReader::IProcessor, IVTShell
 		}
 
 		return env_shell;
-	}
-
-	virtual HANDLE ConsoleHandle()
-	{
-		return _console_handle;
 	}
 
 	int ExecLeaderProcess()
@@ -460,6 +457,7 @@ class VTShell : VTOutputReader::IProcessor, VTInputReader::IProcessor, IVTShell
 	void OnCtrlC(bool alt)
 	{
 		if (alt) {
+			_console_kill_requested = true;
 			fprintf(stderr, "VT: Ctrl+Alt+C - killing them hardly...\n");
 			SendSignalToVT(SIGKILL);
 			DetachTerminal();
@@ -486,9 +484,9 @@ class VTShell : VTOutputReader::IProcessor, VTInputReader::IProcessor, IVTShell
 
 		SetFarConsoleMode(TRUE);
 		if (kind == CLK_EDIT)
-			EditConsoleHistory(true);
+			EditConsoleHistory(NULL, true);
 		else
-			ViewConsoleHistory(true, kind == CLK_VIEW_AUTOCLOSE);
+			ViewConsoleHistory(NULL, true, kind == CLK_VIEW_AUTOCLOSE);
 
 		CtrlObject->CmdLine->ShowBackground();
 		ScrBuf.Flush();
@@ -958,6 +956,11 @@ class VTShell : VTOutputReader::IProcessor, VTInputReader::IProcessor, IVTShell
 		CheckedCloseFD(_pipes_fallback_out);
 	}
 
+	virtual HANDLE ConsoleHandle()
+	{
+		return _console_handle;
+	}
+
 	bool ExecuteCommand(const char *cmd, bool force_sudo, bool may_bgnd, bool may_notify)
 	{
 		ASSERT(!_console_handle);
@@ -990,6 +993,7 @@ class VTShell : VTOutputReader::IProcessor, VTInputReader::IProcessor, IVTShell
 	bool ExecuteCommandContinue()
 	{
 		StopIOReaders();
+		VTLog::ConsoleJoined(_console_handle);
 		WINPORT(JoinConsole)(_console_handle);
 		_console_handle = NULL;
 		OnTerminalResized();
@@ -997,8 +1001,21 @@ class VTShell : VTOutputReader::IProcessor, VTInputReader::IProcessor, IVTShell
 		return ExecuteCommandCommonTail(true);
 	}
 
+	void PrintNoticeOnPrimaryConsole(const FarLangMsg &m)
+	{
+		FARString msg(m);
+		msg.Insert(0, L'\n');
+		msg.Append(L'\n');
+		const DWORD64 saved_color = GetColor();
+		SetColor(COL_HELPTOPIC, true);
+		DWORD dw;
+		WINPORT(WriteConsole)(NULL, msg.CPtr(), msg.GetLength(), &dw, NULL );
+		SetColor(saved_color, true);
+	}
+
 	bool ExecuteCommandCommonTail(bool may_bgnd)
 	{
+		_console_kill_requested = false;
 		StartIOReaders();
 		WAIT_FOR_AND_DISPATCH_INTER_THREAD_CALLS(_output_reader.IsDeactivated() || (_console_switch_requested && may_bgnd));
 		StopIOReaders();
@@ -1008,15 +1025,8 @@ class VTShell : VTOutputReader::IProcessor, VTInputReader::IProcessor, IVTShell
 			if (may_bgnd) {
 				_vta.OnDetached();
 				DeliverPendingWindowInfo();
-				_console_handle = WINPORT(ForkConsole)();
-				FARString msg(Msg::CommandBackgrounded);
-				msg.Insert(0, L"\n");
-				msg.Append(L"\n");
-				const DWORD64 saved_color = GetColor();
-				SetColor(COL_HELPTOPIC, true);
-				DWORD dw;
-				WINPORT(WriteConsole)(NULL, msg.CPtr(), msg.GetLength(), &dw, NULL );
-				SetColor(saved_color, true);
+				_console_handle = WINPORT(ForkConsole)();//CommandTerminated
+				PrintNoticeOnPrimaryConsole(Msg::CommandBackgrounded);
 				StartIOReaders();
 				return false;
 			}
@@ -1031,6 +1041,10 @@ class VTShell : VTOutputReader::IProcessor, VTInputReader::IProcessor, IVTShell
 		_allow_osc_clipset = false;
 		_bracketed_paste_expected = false;
 		DeliverPendingWindowInfo();
+		if (_console_kill_requested) {
+			_console_kill_requested = false;
+			PrintNoticeOnPrimaryConsole(Msg::CommandTerminated);
+		}
 
 		std::lock_guard<std::mutex> lock(_read_state_mutex);
 		_far2l_exts.reset();
@@ -1161,21 +1175,16 @@ bool VTShell_Busy()
 	return g_vt_busy != 0;
 }
 
-void VTShell_Enum(std::vector<std::string> &vts)
+void VTShell_Enum(VTInfos &vts)
 {
 	std::lock_guard<std::mutex> lock(g_vts_mutex);
 	for (const auto &vt : g_vts) {
 		vts.emplace_back();
-		auto &str = vts.back();
-		if (!vt->IsDone()) {
-			str+= ' ';
-		} else if (vt->CommandExitCode()) {
-			str+= '!';
-		} else {
-			str+= '#';
-		}
-		str+= ' ';
-		str+= vt->GetTitle();
+		auto &vti = vts.back();
+		vti.con_hnd = vt->ConsoleHandle();
+		vti.title = vt->GetTitle();
+		vti.done = vt->IsDone();
+		vti.exit_code = vt->CommandExitCode();
 	}
 }
 
